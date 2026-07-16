@@ -1,0 +1,163 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum IssueType {
+  PAIN
+  STIFFNESS
+  WEAKNESS
+  MOBILITY
+}
+
+enum Difficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum SubscriptionPlan {
+  MONTHLY
+  ANNUAL
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+  UNPAID
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  passwordHash   String
+  name           String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  stripeCustomerId String?  @unique
+
+  routines     Routine[]
+  subscription Subscription?
+}
+
+model TargetArea {
+  id          String @id @default(cuid())
+  slug        String @unique
+  name        String
+  description String
+  iconName    String @default("body")
+  sortOrder   Int    @default(0)
+
+  muscleGroups TargetAreaMuscleGroup[]
+  routines     Routine[]
+}
+
+model MuscleGroup {
+  id          String @id @default(cuid())
+  slug        String @unique
+  name        String
+  description String
+
+  targetAreas TargetAreaMuscleGroup[]
+  exercises   ExerciseMuscleGroup[]
+}
+
+// Join table: which muscle groups are relevant to a target area, and how strongly.
+model TargetAreaMuscleGroup {
+  targetAreaId  String
+  muscleGroupId String
+  // 1 = primary driver of the pain area, 2 = secondary/supporting
+  weight        Int @default(1)
+
+  targetArea  TargetArea  @relation(fields: [targetAreaId], references: [id], onDelete: Cascade)
+  muscleGroup MuscleGroup @relation(fields: [muscleGroupId], references: [id], onDelete: Cascade)
+
+  @@id([targetAreaId, muscleGroupId])
+}
+
+model Exercise {
+  id           String     @id @default(cuid())
+  slug         String     @unique
+  name         String
+  description  String
+  instructions String
+  difficulty   Difficulty @default(BEGINNER)
+  // Default duration when the exercise is a hold/timed movement.
+  durationSeconds Int     @default(30)
+  // Which intake issue types this exercise is well-suited for.
+  issueTypes   IssueType[]
+  equipment    String     @default("none")
+  createdAt    DateTime   @default(now())
+
+  muscleGroups     ExerciseMuscleGroup[]
+  routineExercises RoutineExercise[]
+}
+
+// Join table: which muscle groups an exercise targets.
+model ExerciseMuscleGroup {
+  exerciseId    String
+  muscleGroupId String
+  isPrimary     Boolean @default(true)
+
+  exercise    Exercise    @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  muscleGroup MuscleGroup @relation(fields: [muscleGroupId], references: [id], onDelete: Cascade)
+
+  @@id([exerciseId, muscleGroupId])
+}
+
+model Routine {
+  id                   String    @id @default(cuid())
+  userId               String
+  targetAreaId         String
+  issueType            IssueType
+  timeAvailableMinutes Int
+  totalDurationSeconds Int
+  createdAt            DateTime  @default(now())
+  startedAt            DateTime?
+  completedAt          DateTime?
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  targetArea TargetArea @relation(fields: [targetAreaId], references: [id])
+  exercises  RoutineExercise[]
+
+  @@index([userId, createdAt])
+  @@index([userId, completedAt])
+}
+
+model RoutineExercise {
+  id              String  @id @default(cuid())
+  routineId       String
+  exerciseId      String
+  order           Int
+  durationSeconds Int
+
+  routine  Routine  @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  exercise Exercise @relation(fields: [exerciseId], references: [id])
+
+  @@unique([routineId, order])
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  plan                 SubscriptionPlan?
+  status               SubscriptionStatus @default(INCOMPLETE)
+  stripeCustomerId     String?
+  stripeSubscriptionId String?            @unique
+  stripePriceId        String?
+  currentPeriodEnd     DateTime?
+  trialEnd             DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
