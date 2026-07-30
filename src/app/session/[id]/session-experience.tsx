@@ -5,8 +5,15 @@ import Link from "next/link";
 import { Check, Pause, Play, SkipForward } from "lucide-react";
 import { submitSessionFeedback } from "@/app/actions/session";
 import { GhostButton, primaryButtonClasses } from "@/components/buttons";
+import { getYouTubeEmbedUrl } from "@/lib/youtube";
 
-type PlayerExercise = { id: string; name: string; instructions: string; durationSeconds: number };
+type PlayerExercise = {
+  id: string;
+  name: string;
+  instructions: string;
+  durationSeconds: number;
+  videoUrl: string | null;
+};
 
 type Phase = "before" | "player" | "feedback" | "done";
 
@@ -142,6 +149,7 @@ function Player({
   const progressPercent = Math.round(
     ((current.durationSeconds - secondsLeft) / current.durationSeconds) * 100
   );
+  const embedUrl = getYouTubeEmbedUrl(current.videoUrl);
 
   return (
     <div className="flex h-full flex-col bg-ink px-6 pb-10 pt-8 text-paper">
@@ -162,27 +170,40 @@ function Player({
         ))}
       </div>
 
-      <div className="flex grow flex-col items-center justify-center text-center">
+      <div className="flex grow flex-col items-center justify-center overflow-y-auto text-center">
         <h1 className="font-display mt-4 text-2xl">{current.name}</h1>
-        <p className="mt-3 max-w-xs text-sm leading-relaxed text-[#B7C0B8]">{current.instructions}</p>
+        <p className="mt-2 max-w-xs text-sm leading-relaxed text-[#B7C0B8]">{current.instructions}</p>
 
-        <div className="relative mt-9 flex h-36 w-36 items-center justify-center">
-          <svg className="absolute -rotate-90" width="144" height="144">
-            <circle cx="72" cy="72" r="64" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="6" />
+        {embedUrl && (
+          <div className="mt-4 aspect-video w-full max-w-[280px] overflow-hidden rounded-2xl border border-white/10 bg-black">
+            <iframe
+              key={current.id}
+              src={embedUrl}
+              title={`${current.name} demonstration`}
+              className="h-full w-full"
+              allow="accelerometer; encrypted-media; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        )}
+
+        <div className="relative mt-6 flex h-28 w-28 shrink-0 items-center justify-center">
+          <svg className="absolute -rotate-90" width="112" height="112">
+            <circle cx="56" cy="56" r="49" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="6" />
             <circle
-              cx="72"
-              cy="72"
-              r="64"
+              cx="56"
+              cy="56"
+              r="49"
               fill="none"
               stroke="#D3A05C"
               strokeWidth="6"
               strokeLinecap="round"
-              strokeDasharray={2 * Math.PI * 64}
-              strokeDashoffset={2 * Math.PI * 64 * (1 - progressPercent / 100)}
+              strokeDasharray={2 * Math.PI * 49}
+              strokeDashoffset={2 * Math.PI * 49 * (1 - progressPercent / 100)}
               style={{ transition: "stroke-dashoffset 1s linear" }}
             />
           </svg>
-          <span className="font-mono text-3xl">{secondsLeft}s</span>
+          <span className="font-mono text-2xl">{secondsLeft}s</span>
         </div>
       </div>
 

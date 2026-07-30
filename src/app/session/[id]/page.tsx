@@ -53,6 +53,7 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
     name: se.exercise.name,
     instructions: se.exercise.instructions,
     durationSeconds: se.durationSeconds,
+    videoUrl: se.exercise.videoUrl,
   }));
 
   return (
