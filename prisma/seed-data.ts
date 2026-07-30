@@ -98,6 +98,7 @@ export const exercises: {
   durationSeconds: number;
   equipment: string;
   goals: GoalSeed[];
+  videoUrl?: string;
   muscleGroups: { slug: string; isPrimary: boolean }[];
 }[] = [
   // --- Neck ---
@@ -111,6 +112,7 @@ export const exercises: {
     durationSeconds: 45,
     equipment: "none",
     goals: ["MOBILITY", "REDUCE_PAIN"],
+    videoUrl: "https://www.youtube.com/watch?v=W8Lk6E6_cgg",
     muscleGroups: [{ slug: "neck-flexors", isPrimary: true }],
   },
   {
@@ -123,6 +125,7 @@ export const exercises: {
     durationSeconds: 30,
     equipment: "none",
     goals: ["PREVENT", "REDUCE_PAIN"],
+    videoUrl: "https://www.youtube.com/watch?v=gIBoxQ6AlS0",
     muscleGroups: [{ slug: "neck-flexors", isPrimary: true }],
   },
   {
@@ -135,6 +138,7 @@ export const exercises: {
     durationSeconds: 30,
     equipment: "none",
     goals: ["REDUCE_PAIN", "MOBILITY"],
+    videoUrl: "https://www.youtube.com/watch?v=2NOsE-VPpkE",
     muscleGroups: [{ slug: "neck-flexors", isPrimary: true }],
   },
   {
@@ -147,6 +151,7 @@ export const exercises: {
     durationSeconds: 30,
     equipment: "none",
     goals: ["REDUCE_PAIN", "MOBILITY"],
+    videoUrl: "https://www.youtube.com/watch?v=L0aIUVQVvNg",
     muscleGroups: [{ slug: "levator-scapulae", isPrimary: true }, { slug: "upper-back", isPrimary: false }],
   },
   {
@@ -159,6 +164,7 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "none",
     goals: ["PREVENT"],
+    videoUrl: "https://www.youtube.com/watch?v=A_lOyhqFB8c",
     muscleGroups: [{ slug: "neck-flexors", isPrimary: true }],
   },
 
@@ -173,6 +179,7 @@ export const exercises: {
     durationSeconds: 45,
     equipment: "doorway",
     goals: ["MOBILITY", "REDUCE_PAIN"],
+    videoUrl: "https://www.youtube.com/watch?v=KQF0-vtWaaE",
     muscleGroups: [{ slug: "chest", isPrimary: true }],
   },
   {
@@ -185,6 +192,7 @@ export const exercises: {
     durationSeconds: 30,
     equipment: "none",
     goals: ["MOBILITY", "ENERGY"],
+    videoUrl: "https://www.youtube.com/watch?v=EDKOTSffwKI",
     muscleGroups: [{ slug: "deltoids", isPrimary: true }, { slug: "upper-back", isPrimary: false }],
   },
   {
@@ -197,6 +205,7 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "resistance band",
     goals: ["PREVENT"],
+    videoUrl: "https://www.youtube.com/watch?v=KRmT2td4uQA",
     muscleGroups: [{ slug: "rotator-cuff", isPrimary: true }],
   },
   {
@@ -209,6 +218,7 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "wall",
     goals: ["MOBILITY", "PREVENT"],
+    videoUrl: "https://www.youtube.com/watch?v=GaP20t6ZOfU",
     muscleGroups: [
       { slug: "upper-back", isPrimary: true },
       { slug: "rotator-cuff", isPrimary: false },
@@ -225,6 +235,7 @@ export const exercises: {
     durationSeconds: 30,
     equipment: "chair",
     goals: ["REDUCE_PAIN", "MOBILITY"],
+    videoUrl: "https://www.youtube.com/watch?v=ptcaFCaj1nc",
     muscleGroups: [{ slug: "rotator-cuff", isPrimary: true }, { slug: "deltoids", isPrimary: false }],
   },
   {
@@ -237,6 +248,7 @@ export const exercises: {
     durationSeconds: 30,
     equipment: "none",
     goals: ["REDUCE_PAIN"],
+    videoUrl: "https://www.youtube.com/watch?v=BhqrrSRg1Uc",
     muscleGroups: [{ slug: "deltoids", isPrimary: true }, { slug: "upper-back", isPrimary: false }],
   },
 
@@ -251,6 +263,7 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "chair",
     goals: ["MOBILITY", "REDUCE_PAIN"],
+    videoUrl: "https://www.youtube.com/watch?v=pLerj04KsHw",
     muscleGroups: [{ slug: "upper-back", isPrimary: true }],
   },
   {
@@ -263,6 +276,7 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "wall",
     goals: ["PREVENT", "MOBILITY"],
+    videoUrl: "https://www.youtube.com/watch?v=CwoPzrBDfpk",
     muscleGroups: [{ slug: "upper-back", isPrimary: true }, { slug: "rotator-cuff", isPrimary: false }],
   },
   {
@@ -275,6 +289,7 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "none",
     goals: ["PREVENT"],
+    videoUrl: "https://www.youtube.com/watch?v=5Q0YUGWykkU",
     muscleGroups: [{ slug: "upper-back", isPrimary: true }],
   },
   {
@@ -287,6 +302,7 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "chair",
     goals: ["MOBILITY", "REDUCE_PAIN"],
+    videoUrl: "https://www.youtube.com/watch?v=4DgM17tIwtw",
     muscleGroups: [{ slug: "upper-back", isPrimary: true }, { slug: "chest", isPrimary: false }],
   },
   {
@@ -299,6 +315,7 @@ export const exercises: {
     durationSeconds: 45,
     equipment: "none",
     goals: ["MOBILITY", "ENERGY"],
+    videoUrl: "https://www.youtube.com/watch?v=lD9ZDwlHmmE",
     muscleGroups: [
       { slug: "upper-back", isPrimary: true },
       { slug: "erector-spinae", isPrimary: false },
@@ -317,6 +334,7 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "none",
     goals: ["REDUCE_PAIN", "MOBILITY"],
+    videoUrl: "https://www.youtube.com/watch?v=goN4rWbQUn4",
     muscleGroups: [{ slug: "hamstrings", isPrimary: true }, { slug: "erector-spinae", isPrimary: false }],
   },
   {
@@ -329,6 +347,7 @@ export const exercises: {
     durationSeconds: 45,
     equipment: "none",
     goals: ["REDUCE_PAIN"],
+    videoUrl: "https://www.youtube.com/watch?v=jaCOZJPSy2g",
     muscleGroups: [{ slug: "erector-spinae", isPrimary: true }, { slug: "glutes", isPrimary: false }],
   },
   {
@@ -341,6 +360,7 @@ export const exercises: {
     durationSeconds: 30,
     equipment: "none",
     goals: ["REDUCE_PAIN"],
+    videoUrl: "https://www.youtube.com/watch?v=HzkE6QlaDe0",
     muscleGroups: [
       { slug: "hip-flexors", isPrimary: true },
       { slug: "erector-spinae", isPrimary: false },
@@ -357,6 +377,7 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "none",
     goals: ["PREVENT", "REDUCE_PAIN"],
+    videoUrl: "https://www.youtube.com/watch?v=pI5nJHT2hpA",
     muscleGroups: [{ slug: "core", isPrimary: true }, { slug: "erector-spinae", isPrimary: false }],
   },
   {
@@ -369,6 +390,7 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "none",
     goals: ["PREVENT", "ENERGY"],
+    videoUrl: "https://www.youtube.com/watch?v=ee5DVxN_Tfw",
     muscleGroups: [
       { slug: "core", isPrimary: true },
       { slug: "erector-spinae", isPrimary: true },
@@ -385,6 +407,7 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "none",
     goals: ["PREVENT", "ENERGY"],
+    videoUrl: "https://www.youtube.com/watch?v=nuapk_-Q2BI",
     muscleGroups: [
       { slug: "glutes", isPrimary: true },
       { slug: "hamstrings", isPrimary: false },
@@ -403,6 +426,7 @@ export const exercises: {
     durationSeconds: 30,
     equipment: "none",
     goals: ["REDUCE_PAIN", "MOBILITY"],
+    videoUrl: "https://www.youtube.com/watch?v=iZ1eZBY4fwM",
     muscleGroups: [{ slug: "hip-flexors", isPrimary: true }],
   },
   {
@@ -415,6 +439,7 @@ export const exercises: {
     durationSeconds: 30,
     equipment: "none",
     goals: ["REDUCE_PAIN"],
+    videoUrl: "https://www.youtube.com/watch?v=-g0nuyTHMrI",
     muscleGroups: [{ slug: "deep-hip-rotators", isPrimary: true }, { slug: "glutes", isPrimary: false }],
   },
   {
@@ -427,6 +452,7 @@ export const exercises: {
     durationSeconds: 30,
     equipment: "none",
     goals: ["MOBILITY"],
+    videoUrl: "https://www.youtube.com/watch?v=SbCtOwTsJWU",
     muscleGroups: [{ slug: "adductors", isPrimary: true }],
   },
   {
@@ -439,6 +465,7 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "none",
     goals: ["MOBILITY", "ENERGY"],
+    videoUrl: "https://www.youtube.com/watch?v=JYqLwajOGjI",
     muscleGroups: [{ slug: "hip-flexors", isPrimary: true }, { slug: "deep-hip-rotators", isPrimary: false }],
   },
   {
@@ -451,6 +478,7 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "none",
     goals: ["PREVENT"],
+    videoUrl: "https://www.youtube.com/watch?v=qBqKuEQl9sI",
     muscleGroups: [{ slug: "glutes", isPrimary: true }],
   },
   {
@@ -463,6 +491,7 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "none",
     goals: ["PREVENT"],
+    videoUrl: "https://www.youtube.com/watch?v=vsQugiJgZZE",
     muscleGroups: [{ slug: "glutes", isPrimary: true }],
   },
 
@@ -477,6 +506,7 @@ export const exercises: {
     durationSeconds: 35,
     equipment: "none",
     goals: ["REDUCE_PAIN", "MOBILITY"],
+    videoUrl: "https://www.youtube.com/watch?v=rQlDHgTUbO0",
     muscleGroups: [
       { slug: "forearm-flexors", isPrimary: true },
       { slug: "forearm-extensors", isPrimary: true },
@@ -492,6 +522,7 @@ export const exercises: {
     durationSeconds: 30,
     equipment: "none",
     goals: ["MOBILITY", "ENERGY"],
+    videoUrl: "https://www.youtube.com/watch?v=IJvS9bYl_cs",
     muscleGroups: [
       { slug: "forearm-flexors", isPrimary: true },
       { slug: "forearm-extensors", isPrimary: true },
@@ -507,6 +538,7 @@ export const exercises: {
     durationSeconds: 30,
     equipment: "none",
     goals: ["REDUCE_PAIN", "MOBILITY"],
+    videoUrl: "https://www.youtube.com/watch?v=RkyCo0-Yo5s",
     muscleGroups: [{ slug: "forearm-flexors", isPrimary: true }],
   },
   {
@@ -519,6 +551,7 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "light weight",
     goals: ["PREVENT"],
+    videoUrl: "https://www.youtube.com/watch?v=7ac_qmBjkFI",
     muscleGroups: [{ slug: "forearm-flexors", isPrimary: true }],
   },
   {
@@ -531,6 +564,7 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "light weight",
     goals: ["PREVENT"],
+    videoUrl: "https://www.youtube.com/watch?v=SfENsl5klVA",
     muscleGroups: [{ slug: "forearm-extensors", isPrimary: true }],
   },
 ];
