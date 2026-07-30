@@ -13,21 +13,11 @@ export async function sendCoachMessage(text: string) {
   const trimmed = text.trim();
   if (!trimmed) throw new Error("Message can't be empty");
 
-  const history = await prisma.coachMessage.findMany({
-    where: { userId: user.id },
-    orderBy: { createdAt: "asc" },
-    take: 20,
-  });
-
   await prisma.coachMessage.create({
     data: { userId: user.id, role: "USER", content: trimmed },
   });
 
-  const reply = await generateCoachReply(
-    user.id,
-    history.map((m) => ({ role: m.role, content: m.content })),
-    trimmed
-  );
+  const reply = await generateCoachReply(user.id, trimmed);
 
   await prisma.coachMessage.create({
     data: {

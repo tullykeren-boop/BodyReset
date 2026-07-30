@@ -9,8 +9,9 @@ interactive body map, time available, goal), and get a daily plan of three
 short recovery sessions (Morning / Midday / End of Day) generated from a
 seeded Postgres database. A guided session player walks them through each
 exercise with a timer, captures before/after pain feedback, and a dashboard
-tracks a recovery score, streak, and progress over time. An AI coach (backed
-by the Claude API) reacts to how the user says they're feeling and can spin
+tracks a recovery score, streak, and progress over time. An AI coach reacts to
+how the user says they're feeling — matched with a rule-based engine grounded
+in their actual stored profile and history, no external LLM API — and can spin
 up an ad-hoc session on the spot. Free accounts get 3 sessions/week; a
 Personal plan (Stripe, 3-day free trial) unlocks unlimited sessions.
 
@@ -20,7 +21,7 @@ Personal plan (Stripe, 3-day free trial) unlocks unlimited sessions.
 - TypeScript + Tailwind CSS 4
 - PostgreSQL via Prisma 7 (`@prisma/adapter-pg`)
 - Custom email/password auth (bcrypt + signed JWT session cookie via `jose`)
-- Claude API (`@anthropic-ai/sdk`) for the AI coach
+- Rule-based AI coach (`src/lib/coach.ts`), no external LLM dependency
 - Stripe Checkout + Billing Portal + webhooks
 
 ## Getting started
@@ -40,13 +41,11 @@ Personal plan (Stripe, 3-day free trial) unlocks unlimited sessions.
 
    - `DATABASE_URL` — a Postgres connection string.
    - `AUTH_SECRET` — random string used to sign session cookies (`openssl rand -base64 32`).
-   - `ANTHROPIC_API_KEY` — from [console.anthropic.com](https://console.anthropic.com/), to power the AI coach with real replies.
    - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` — from your [Stripe test dashboard](https://dashboard.stripe.com/test/apikeys).
    - `STRIPE_PRICE_PERSONAL` — price ID for the Personal plan (create a recurring Price in test mode).
 
-   Without an Anthropic key, the coach falls back to a lightweight rule-based
-   reply instead of crashing. Without Stripe keys, the billing page shows a
-   "not configured" notice and checkout attempts return a friendly error.
+   Without Stripe keys, the billing page shows a "not configured" notice and
+   checkout attempts return a friendly error.
 
 3. Push the schema and seed the database:
 
@@ -99,9 +98,10 @@ Copy the printed webhook signing secret into `STRIPE_WEBHOOK_SECRET`.
 `prisma/seed-data.ts` seeds 6 body areas, 15 muscle groups, and 33 exercises
 with realistic instructions. `src/lib/daily-plan-generator.ts` scores
 candidate exercises against the user's pain areas and goal, then builds three
-sessions sized off their available time. `src/lib/coach.ts` grounds the AI
-coach's replies in the user's actual stored profile, streak, and feedback —
-never fabricated details like calendar data.
+sessions sized off their available time. `src/lib/coach.ts` matches keywords
+in the user's message against a small set of body-area/energy patterns,
+grounded in their actual stored profile, streak, and feedback — never
+fabricated details like calendar data.
 
 ## Useful scripts
 

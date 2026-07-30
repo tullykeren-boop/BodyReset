@@ -1,8 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { calculateStreak } from "@/lib/streaks";
-import { getAnthropicClient, isAnthropicConfigured, COACH_MODEL } from "@/lib/anthropic";
-import type { CoachRole, Goal } from "@/generated/prisma/client";
-import type Anthropic from "@anthropic-ai/sdk";
+import type { Goal } from "@/generated/prisma/client";
 
 export type CoachContext = {
   name: string | null;
@@ -48,47 +46,7 @@ async function getCoachContext(userId: string): Promise<CoachContext> {
   };
 }
 
-function buildSystemPrompt(context: CoachContext): string {
-  const lines = [
-    "You are the ReSet coach: a calm, warm, concise AI workday recovery coach.",
-    "ReSet helps desk workers relieve and prevent physical discomfort (neck, shoulders, upper back, lower back, wrists, hips) with short 3-10 minute guided exercise sessions.",
-    "You are NOT a doctor. Never diagnose conditions or claim to know something about the user you were not told. Only reference facts given below — do not invent details about their calendar, meetings, or day.",
-    "Keep replies to 2-4 short sentences, warm and specific, never generic filler.",
-    "",
-    "What you actually know about this user:",
-    `- Primary goal: ${context.goal.replace("_", " ").toLowerCase()}`,
-    context.painAreaNames.length > 0
-      ? `- Areas they usually feel discomfort: ${context.painAreaNames.join(", ")}`
-      : "- They haven't told us their pain areas yet.",
-    `- Current streak: ${context.streak} day(s)`,
-    context.recentMoods.length > 0
-      ? `- Recent check-ins (most recent first): ${context.recentMoods.join(", ")}`
-      : "- No recent check-ins logged.",
-    context.recentFeedback.length > 0
-      ? `- Recent session feedback: ${context.recentFeedback
-          .map((f) => `pain ${f.painBefore}->${f.painAfter}${f.helped ? ", helped" : ", didn't help much"}`)
-          .join("; ")}`
-      : "- No session feedback yet.",
-    "",
-    "If — and only if — it's genuinely relevant, you may suggest one short recovery session. When you do, end your reply on its own new line with exactly this format (nothing else on that line):",
-    '<<SUGGEST focus="Shoulders" minutes="4">>',
-    "Use one of the user's known pain areas as the focus when possible. Omit this line entirely if a suggestion doesn't fit the conversation.",
-  ];
-  return lines.join("\n");
-}
-
-const SUGGEST_LINE = /<<SUGGEST\s+focus="([^"]+)"\s+minutes="(\d+)">>\s*$/;
-
-function parseSuggestion(text: string): CoachReply {
-  const match = text.match(SUGGEST_LINE);
-  if (!match) return { text: text.trim(), suggestion: null };
-  return {
-    text: text.replace(SUGGEST_LINE, "").trim(),
-    suggestion: { focus: match[1], durationMinutes: Number(match[2]) },
-  };
-}
-
-const FALLBACK_RULES: { match: string[]; reply: (ctx: CoachContext) => CoachReply }[] = [
+const COACH_RULES: { match: string[]; reply: (ctx: CoachContext) => CoachReply }[] = [
   {
     match: ["shoulder"],
     reply: (ctx) => ({
@@ -135,9 +93,9 @@ const FALLBACK_RULES: { match: string[]; reply: (ctx: CoachContext) => CoachRepl
   },
 ];
 
-function fallbackReply(userMessage: string, context: CoachContext): CoachReply {
+function matchReply(userMessage: string, context: CoachContext): CoachReply {
   const lower = userMessage.toLowerCase();
-  const rule = FALLBACK_RULES.find((r) => r.match.some((kw) => lower.includes(kw)));
+  const rule = COACH_RULES.find((r) => r.match.some((kw) => lower.includes(kw)));
   if (rule) return rule.reply(context);
   return {
     text:
@@ -148,39 +106,12 @@ function fallbackReply(userMessage: string, context: CoachContext): CoachReply {
   };
 }
 
-export async function generateCoachReply(
-  userId: string,
-  history: { role: CoachRole; content: string }[],
-  userMessage: string
-): Promise<CoachReply> {
+/**
+ * Rule-based coach reply: matches keywords in the user's message against a
+ * small set of body-area/energy patterns, grounded in their actual stored
+ * profile and history rather than anything invented.
+ */
+export async function generateCoachReply(userId: string, userMessage: string): Promise<CoachReply> {
   const context = await getCoachContext(userId);
-
-  if (!isAnthropicConfigured()) {
-    return fallbackReply(userMessage, context);
-  }
-
-  try {
-    const client = getAnthropicClient();
-    const response = await client.messages.create({
-      model: COACH_MODEL,
-      max_tokens: 300,
-      system: buildSystemPrompt(context),
-      messages: [
-        ...history.map((m) => ({
-          role: m.role === "ASSISTANT" ? ("assistant" as const) : ("user" as const),
-          content: m.content,
-        })),
-        { role: "user" as const, content: userMessage },
-      ],
-    });
-
-    const text = response.content
-      .filter((block): block is Anthropic.TextBlock => block.type === "text")
-      .map((block) => block.text)
-      .join("\n");
-
-    return parseSuggestion(text);
-  } catch {
-    return fallbackReply(userMessage, context);
-  }
+  return matchReply(userMessage, context);
 }
