@@ -1,22 +1,19 @@
 export const TRIAL_DAYS = 3;
+export const FREE_SESSIONS_PER_WEEK = 3;
 
-export const PLANS = {
-  MONTHLY: {
-    id: "MONTHLY",
-    name: "Monthly",
-    priceLabel: "$9",
-    interval: "month",
-    priceId: process.env.STRIPE_PRICE_MONTHLY,
-    description: "Full access, billed every month.",
-  },
-  ANNUAL: {
-    id: "ANNUAL",
-    name: "Annual",
-    priceLabel: "$79",
-    interval: "year",
-    priceId: process.env.STRIPE_PRICE_ANNUAL,
-    description: "Full access, billed once a year. Save 27%.",
-  },
+export const PERSONAL_PLAN = {
+  id: "PERSONAL",
+  name: "Personal",
+  priceLabel: "$9",
+  interval: "month",
+  priceId: process.env.STRIPE_PRICE_PERSONAL,
+  description: "Unlimited sessions, full AI coach, daily adaptive plan.",
 } as const;
 
-export type PlanId = keyof typeof PLANS;
+export const FREE_PLAN = {
+  id: "FREE",
+  name: "Free",
+  priceLabel: "$0",
+  interval: "forever",
+  description: `${FREE_SESSIONS_PER_WEEK} guided sessions / week, core body map, weekly progress.`,
+} as const;

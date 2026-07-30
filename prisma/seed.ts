@@ -1,15 +1,15 @@
 import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { targetAreas, muscleGroups, targetAreaMuscleGroups, exercises } from "./seed-data";
+import { bodyAreas, muscleGroups, bodyAreaMuscleGroups, exercises } from "./seed-data";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  console.log("Seeding target areas...");
-  for (const area of targetAreas) {
-    await prisma.targetArea.upsert({
+  console.log("Seeding body areas...");
+  for (const area of bodyAreas) {
+    await prisma.bodyArea.upsert({
       where: { slug: area.slug },
       update: area,
       create: area,
@@ -25,22 +25,22 @@ async function main() {
     });
   }
 
-  console.log("Linking target areas to muscle groups...");
-  for (const link of targetAreaMuscleGroups) {
-    const [targetArea, muscleGroup] = await Promise.all([
-      prisma.targetArea.findUniqueOrThrow({ where: { slug: link.targetArea } }),
+  console.log("Linking body areas to muscle groups...");
+  for (const link of bodyAreaMuscleGroups) {
+    const [bodyArea, muscleGroup] = await Promise.all([
+      prisma.bodyArea.findUniqueOrThrow({ where: { slug: link.bodyArea } }),
       prisma.muscleGroup.findUniqueOrThrow({ where: { slug: link.muscleGroup } }),
     ]);
-    await prisma.targetAreaMuscleGroup.upsert({
+    await prisma.bodyAreaMuscleGroup.upsert({
       where: {
-        targetAreaId_muscleGroupId: {
-          targetAreaId: targetArea.id,
+        bodyAreaId_muscleGroupId: {
+          bodyAreaId: bodyArea.id,
           muscleGroupId: muscleGroup.id,
         },
       },
       update: { weight: link.weight },
       create: {
-        targetAreaId: targetArea.id,
+        bodyAreaId: bodyArea.id,
         muscleGroupId: muscleGroup.id,
         weight: link.weight,
       },

@@ -1,56 +1,55 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { startCheckout, type BillingFormState } from "@/app/actions/billing";
-import { SubmitButton } from "@/components/submit-button";
-import { PLANS, TRIAL_DAYS, type PlanId } from "@/lib/plans";
+import { useState, useTransition } from "react";
+import { startCheckout } from "@/app/actions/billing";
+import { FREE_PLAN, PERSONAL_PLAN, TRIAL_DAYS } from "@/lib/plans";
 
 export function PlanForm() {
-  const [state, formAction] = useActionState<BillingFormState, FormData>(startCheckout, undefined);
-  const [selected, setSelected] = useState<PlanId>("MONTHLY");
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  function handleCheckout() {
+    startTransition(async () => {
+      const result = await startCheckout();
+      setError(result?.error ?? null);
+    });
+  }
 
   return (
-    <form action={formAction} className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6">
       <div className="grid gap-4 sm:grid-cols-2">
-        {Object.values(PLANS).map((plan) => (
-          <label
-            key={plan.id}
-            className={`cursor-pointer rounded-2xl border p-6 text-left transition ${
-              selected === plan.id
-                ? "border-teal-600 bg-teal-50 dark:bg-teal-950/40"
-                : "border-neutral-200 hover:border-neutral-300 dark:border-neutral-800"
-            }`}
-          >
-            <input
-              type="radio"
-              name="plan"
-              value={plan.id}
-              checked={selected === plan.id}
-              onChange={() => setSelected(plan.id)}
-              className="sr-only"
-            />
-            <p className="font-medium">{plan.name}</p>
-            <p className="mt-2 text-3xl font-semibold">
-              {plan.priceLabel}
-              <span className="text-base font-normal text-neutral-500">/{plan.interval}</span>
-            </p>
-            <p className="mt-2 text-sm text-neutral-500">{plan.description}</p>
-          </label>
-        ))}
+        <div className="rounded-2xl border border-mist bg-white/60 p-6 text-left">
+          <p className="font-medium">{FREE_PLAN.name}</p>
+          <p className="mt-2 text-3xl font-semibold">{FREE_PLAN.priceLabel}</p>
+          <p className="mt-2 text-sm text-ink-soft">{FREE_PLAN.description}</p>
+        </div>
+        <div className="rounded-2xl border border-moss bg-card p-6 text-left shadow-[0_20px_40px_-20px_rgba(28,35,33,0.3)]">
+          <p className="font-medium">{PERSONAL_PLAN.name}</p>
+          <p className="mt-2 text-3xl font-semibold">
+            {PERSONAL_PLAN.priceLabel}
+            <span className="text-base font-normal text-ink-soft">/{PERSONAL_PLAN.interval}</span>
+          </p>
+          <p className="mt-2 text-sm text-ink-soft">{PERSONAL_PLAN.description}</p>
+        </div>
       </div>
 
-      {state?.error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
-          {state.error}
+      <div className="flex flex-col items-center gap-3">
+        {error && (
+          <p className="w-full rounded-lg bg-[#F3E2D6] px-3 py-2 text-center text-sm text-[#8C4C2C]">
+            {error}
+          </p>
+        )}
+        <button
+          onClick={handleCheckout}
+          disabled={isPending}
+          className="rounded-full bg-moss px-10 py-3.5 font-medium text-paper transition hover:bg-moss-deep disabled:opacity-60"
+        >
+          {isPending ? "Redirecting to checkout…" : `Start ${TRIAL_DAYS}-day free trial`}
+        </button>
+        <p className="text-center text-xs text-ink-soft/80">
+          You won&apos;t be charged until your trial ends. Cancel anytime.
         </p>
-      )}
-
-      <SubmitButton pendingText="Redirecting to checkout…" className="self-center px-10">
-        Start {TRIAL_DAYS}-day free trial
-      </SubmitButton>
-      <p className="text-center text-xs text-neutral-500">
-        You won&apos;t be charged until your trial ends. Cancel anytime.
-      </p>
-    </form>
+      </div>
+    </div>
   );
 }

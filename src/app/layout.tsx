@@ -1,22 +1,31 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { NavHeader } from "@/components/nav-header";
+import { Fraunces, Inter, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
   subsets: ["latin"],
+  axes: ["opsz"],
+  weight: "variable",
+  style: ["normal", "italic"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+const plexMono = IBM_Plex_Mono({
+  variable: "--font-plex-mono",
+  subsets: ["latin"],
+  weight: ["400", "500"],
 });
 
 export const metadata: Metadata = {
-  title: "Body Reset — Short routines for the spot that hurts",
+  title: "ReSet — AI Workday Recovery Coach",
   description:
-    "Answer a few questions and get a targeted 3-6 exercise routine for your lower back, knees, shoulders, neck, hips, or wrists.",
+    "Your AI-powered recovery coach that helps you prevent and relieve workday pain in just a few minutes.",
 };
 
 export default function RootLayout({
@@ -27,12 +36,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${fraunces.variable} ${inter.variable} ${plexMono.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col">
-        <NavHeader />
-        <main className="flex flex-1 flex-col">{children}</main>
-      </body>
+      <body className="flex min-h-full flex-col bg-paper text-ink">{children}</body>
     </html>
   );
 }

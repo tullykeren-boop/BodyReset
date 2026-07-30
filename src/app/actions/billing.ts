@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
-import { PLANS, TRIAL_DAYS, type PlanId } from "@/lib/plans";
+import { PERSONAL_PLAN, TRIAL_DAYS } from "@/lib/plans";
 
 export type BillingFormState = { error?: string } | undefined;
 
@@ -12,24 +12,15 @@ function getAppUrl() {
   return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 }
 
-export async function startCheckout(
-  _prevState: BillingFormState,
-  formData: FormData
-): Promise<BillingFormState> {
+export async function startCheckout(): Promise<BillingFormState> {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
   if (!isStripeConfigured()) {
     return { error: "Billing is not configured yet. Add your Stripe keys to enable checkout." };
   }
-
-  const planId = formData.get("plan");
-  if (planId !== "MONTHLY" && planId !== "ANNUAL") {
-    return { error: "Please choose a plan" };
-  }
-  const plan = PLANS[planId as PlanId];
-  if (!plan.priceId) {
-    return { error: `Missing Stripe price ID for the ${plan.name} plan` };
+  if (!PERSONAL_PLAN.priceId) {
+    return { error: "Missing Stripe price ID for the Personal plan." };
   }
 
   const stripe = getStripe();
@@ -54,10 +45,10 @@ export async function startCheckout(
     mode: "subscription",
     customer: stripeCustomerId,
     client_reference_id: user.id,
-    line_items: [{ price: plan.priceId, quantity: 1 }],
+    line_items: [{ price: PERSONAL_PLAN.priceId, quantity: 1 }],
     subscription_data: {
       trial_period_days: TRIAL_DAYS,
-      metadata: { userId: user.id, plan: planId },
+      metadata: { userId: user.id, plan: "PERSONAL" },
     },
     success_url: `${appUrl}/billing?success=1`,
     cancel_url: `${appUrl}/billing?canceled=1`,

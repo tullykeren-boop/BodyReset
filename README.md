@@ -1,14 +1,18 @@
 # ReSet
 
-A Next.js (App Router, TypeScript, Tailwind) app that generates short, targeted
-exercise routines based on where a user is feeling pain or tightness.
+An AI-powered Workday Recovery Coach: a Next.js (App Router, TypeScript,
+Tailwind) app that helps desk workers prevent and relieve workday physical
+discomfort in a few minutes, without leaving their day.
 
-Users sign up, pick a target body area, answer a short intake (issue type +
-time available), and get a generated 3-6 exercise routine pulled from a seeded
-Postgres database. A sequential workout player walks them through it with
-per-exercise timers, and a dashboard tracks past routines and streaks. Access
-is gated behind a Stripe subscription (monthly or annual) with a 3-day free
-trial.
+Users sign up, answer a short onboarding flow (workday type, pain areas via an
+interactive body map, time available, goal), and get a daily plan of three
+short recovery sessions (Morning / Midday / End of Day) generated from a
+seeded Postgres database. A guided session player walks them through each
+exercise with a timer, captures before/after pain feedback, and a dashboard
+tracks a recovery score, streak, and progress over time. An AI coach (backed
+by the Claude API) reacts to how the user says they're feeling and can spin
+up an ad-hoc session on the spot. Free accounts get 3 sessions/week; a
+Personal plan (Stripe, 3-day free trial) unlocks unlimited sessions.
 
 ## Stack
 
@@ -16,6 +20,7 @@ trial.
 - TypeScript + Tailwind CSS 4
 - PostgreSQL via Prisma 7 (`@prisma/adapter-pg`)
 - Custom email/password auth (bcrypt + signed JWT session cookie via `jose`)
+- Claude API (`@anthropic-ai/sdk`) for the AI coach
 - Stripe Checkout + Billing Portal + webhooks
 
 ## Getting started
@@ -35,12 +40,13 @@ trial.
 
    - `DATABASE_URL` — a Postgres connection string.
    - `AUTH_SECRET` — random string used to sign session cookies (`openssl rand -base64 32`).
+   - `ANTHROPIC_API_KEY` — from [console.anthropic.com](https://console.anthropic.com/), to power the AI coach with real replies.
    - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` — from your [Stripe test dashboard](https://dashboard.stripe.com/test/apikeys).
-   - `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_ANNUAL` — price IDs for two recurring Prices you create in Stripe (test mode).
+   - `STRIPE_PRICE_PERSONAL` — price ID for the Personal plan (create a recurring Price in test mode).
 
-   Without Stripe keys configured, the app still runs — the billing page shows
-   a "not configured" notice instead of crashing, and checkout attempts return
-   a friendly error.
+   Without an Anthropic key, the coach falls back to a lightweight rule-based
+   reply instead of crashing. Without Stripe keys, the billing page shows a
+   "not configured" notice and checkout attempts return a friendly error.
 
 3. Push the schema and seed the database:
 
@@ -72,22 +78,30 @@ Copy the printed webhook signing secret into `STRIPE_WEBHOOK_SECRET`.
 
 `prisma/schema.prisma` defines:
 
-- **TargetArea** — a body area a user can select (lower back, knees,
-  shoulders, neck, hips, wrists).
-- **MuscleGroup** — a muscle group, linked to target areas
-  (`TargetAreaMuscleGroup`, weighted primary/secondary) and to exercises
-  (`ExerciseMuscleGroup`, primary/secondary).
-- **Exercise** — a single movement, tagged with the issue types it suits
-  (`PAIN`, `STIFFNESS`, `WEAKNESS`, `MOBILITY`) and a default duration.
-- **Routine** / **RoutineExercise** — a generated, ordered set of exercises
-  for a user, target area, issue type, and time budget.
+- **Profile** — a user's onboarding answers (workday type, time available,
+  goal) plus their selected **BodyArea**(s) via `ProfilePainArea`.
+- **BodyArea** — a body area a user can select (neck, shoulders, upper back,
+  lower back, wrists, hips).
+- **MuscleGroup** — linked to body areas (`BodyAreaMuscleGroup`, weighted
+  primary/secondary) and to exercises (`ExerciseMuscleGroup`,
+  primary/secondary).
+- **Exercise** — a single movement, tagged with the onboarding goals it suits
+  (`REDUCE_PAIN`, `PREVENT`, `MOBILITY`, `ENERGY`) and a default duration.
+- **DailyPlan** / **PlannedSession** / **PlannedSessionExercise** — the three
+  generated sessions (Morning/Midday/Evening, plus ad-hoc coach-suggested
+  ones) for a user on a given day.
+- **SessionFeedback** — before/after pain and follow-up questions captured
+  after each session.
+- **CheckIn** — the daily "how's your body feeling" mood check-in.
+- **CoachMessage** — the persisted AI coach conversation history.
 - **Subscription** — mirrors the user's Stripe subscription state.
 
-`prisma/seed-data.ts` seeds 6 target areas, 17 muscle groups, and ~38
-exercises with realistic instructions. `src/lib/routine-generator.ts` scores
-candidate exercises against the target area's muscle groups and the user's
-issue type, then picks 3-6 of them depending on time available (5/10/15/20
-min).
+`prisma/seed-data.ts` seeds 6 body areas, 15 muscle groups, and 33 exercises
+with realistic instructions. `src/lib/daily-plan-generator.ts` scores
+candidate exercises against the user's pain areas and goal, then builds three
+sessions sized off their available time. `src/lib/coach.ts` grounds the AI
+coach's replies in the user's actual stored profile, streak, and feedback —
+never fabricated details like calendar data.
 
 ## Useful scripts
 
@@ -98,5 +112,5 @@ min).
 | `npm run lint` | Lint |
 | `npm run db:push` | Push the Prisma schema to the database |
 | `npm run db:migrate` | Create/apply a migration |
-| `npm run db:seed` | Seed target areas, muscle groups, and exercises |
+| `npm run db:seed` | Seed body areas, muscle groups, and exercises |
 | `npm run db:studio` | Open Prisma Studio |

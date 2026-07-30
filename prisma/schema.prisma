@@ -7,11 +7,18 @@ datasource db {
   provider = "postgresql"
 }
 
-enum IssueType {
-  PAIN
-  STIFFNESS
-  WEAKNESS
+enum WorkdayType {
+  MEETINGS
+  DEEPWORK
+  CREATIVE
+  MIXED
+}
+
+enum Goal {
+  REDUCE_PAIN
+  PREVENT
   MOBILITY
+  ENERGY
 }
 
 enum Difficulty {
@@ -20,9 +27,27 @@ enum Difficulty {
   ADVANCED
 }
 
+enum SessionSlot {
+  MORNING
+  MIDDAY
+  EVENING
+  ADHOC
+}
+
+enum CheckInMood {
+  GREAT
+  OKAY
+  TENSE
+  PAIN
+}
+
+enum CoachRole {
+  USER
+  ASSISTANT
+}
+
 enum SubscriptionPlan {
-  MONTHLY
-  ANNUAL
+  PERSONAL
 }
 
 enum SubscriptionStatus {
@@ -35,29 +60,55 @@ enum SubscriptionStatus {
 }
 
 model User {
-  id             String    @id @default(cuid())
-  email          String    @unique
-  passwordHash   String
-  name           String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  stripeCustomerId String?  @unique
+  stripeCustomerId String? @unique
 
-  routines     Routine[]
-  subscription Subscription?
+  profile       Profile?
+  dailyPlans    DailyPlan[]
+  checkIns      CheckIn[]
+  coachMessages CoachMessage[]
+  subscription  Subscription?
 }
 
-model TargetArea {
+// One per user: the answers from onboarding that drive daily plan generation.
+model Profile {
+  id                   String      @id @default(cuid())
+  userId               String      @unique
+  workdayType          WorkdayType
+  timeAvailableMinutes Int
+  goal                 Goal
+  onboardedAt          DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  painAreas ProfilePainArea[]
+}
+
+model BodyArea {
   id          String @id @default(cuid())
   slug        String @unique
   name        String
   description String
-  iconName    String @default("body")
   sortOrder   Int    @default(0)
 
-  muscleGroups TargetAreaMuscleGroup[]
-  routines     Routine[]
+  profiles     ProfilePainArea[]
+  muscleGroups BodyAreaMuscleGroup[]
+}
+
+model ProfilePainArea {
+  profileId  String
+  bodyAreaId String
+
+  profile  Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  bodyArea BodyArea @relation(fields: [bodyAreaId], references: [id], onDelete: Cascade)
+
+  @@id([profileId, bodyAreaId])
 }
 
 model MuscleGroup {
@@ -66,42 +117,40 @@ model MuscleGroup {
   name        String
   description String
 
-  targetAreas TargetAreaMuscleGroup[]
-  exercises   ExerciseMuscleGroup[]
+  bodyAreas BodyAreaMuscleGroup[]
+  exercises ExerciseMuscleGroup[]
 }
 
-// Join table: which muscle groups are relevant to a target area, and how strongly.
-model TargetAreaMuscleGroup {
-  targetAreaId  String
+// Join table: which muscle groups are relevant to a body area, and how strongly.
+// weight: 1 = primary driver of discomfort in this area, 2 = secondary/supporting
+model BodyAreaMuscleGroup {
+  bodyAreaId    String
   muscleGroupId String
-  // 1 = primary driver of the pain area, 2 = secondary/supporting
   weight        Int @default(1)
 
-  targetArea  TargetArea  @relation(fields: [targetAreaId], references: [id], onDelete: Cascade)
+  bodyArea    BodyArea    @relation(fields: [bodyAreaId], references: [id], onDelete: Cascade)
   muscleGroup MuscleGroup @relation(fields: [muscleGroupId], references: [id], onDelete: Cascade)
 
-  @@id([targetAreaId, muscleGroupId])
+  @@id([bodyAreaId, muscleGroupId])
 }
 
 model Exercise {
-  id           String     @id @default(cuid())
-  slug         String     @unique
-  name         String
-  description  String
-  instructions String
-  difficulty   Difficulty @default(BEGINNER)
-  // Default duration when the exercise is a hold/timed movement.
-  durationSeconds Int     @default(30)
-  // Which intake issue types this exercise is well-suited for.
-  issueTypes   IssueType[]
-  equipment    String     @default("none")
-  createdAt    DateTime   @default(now())
+  id              String     @id @default(cuid())
+  slug            String     @unique
+  name            String
+  description     String
+  instructions    String
+  difficulty      Difficulty @default(BEGINNER)
+  durationSeconds Int        @default(40)
+  // Which onboarding goals this exercise is well-suited for.
+  goals           Goal[]
+  equipment       String     @default("none")
+  createdAt       DateTime   @default(now())
 
   muscleGroups     ExerciseMuscleGroup[]
-  routineExercises RoutineExercise[]
+  plannedExercises PlannedSessionExercise[]
 }
 
-// Join table: which muscle groups an exercise targets.
 model ExerciseMuscleGroup {
   exerciseId    String
   muscleGroupId String
@@ -113,36 +162,88 @@ model ExerciseMuscleGroup {
   @@id([exerciseId, muscleGroupId])
 }
 
-model Routine {
-  id                   String    @id @default(cuid())
-  userId               String
-  targetAreaId         String
-  issueType            IssueType
-  timeAvailableMinutes Int
-  totalDurationSeconds Int
-  createdAt            DateTime  @default(now())
-  startedAt            DateTime?
-  completedAt          DateTime?
+// One per user per calendar day: the 3 generated recovery sessions for that day.
+model DailyPlan {
+  id        String   @id @default(cuid())
+  userId    String
+  date      DateTime // normalized to midnight UTC of the plan's day
+  createdAt DateTime @default(now())
 
-  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  targetArea TargetArea @relation(fields: [targetAreaId], references: [id])
-  exercises  RoutineExercise[]
+  user     User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessions PlannedSession[]
 
-  @@index([userId, createdAt])
-  @@index([userId, completedAt])
+  @@unique([userId, date])
 }
 
-model RoutineExercise {
-  id              String  @id @default(cuid())
-  routineId       String
-  exerciseId      String
-  order           Int
-  durationSeconds Int
+model PlannedSession {
+  id              String      @id @default(cuid())
+  dailyPlanId     String
+  slot            SessionSlot
+  title           String
+  focusLabel      String
+  durationMinutes Int
+  startedAt       DateTime?
+  completedAt     DateTime?
+  skippedAt       DateTime?
 
-  routine  Routine  @relation(fields: [routineId], references: [id], onDelete: Cascade)
-  exercise Exercise @relation(fields: [exerciseId], references: [id])
+  dailyPlan DailyPlan                @relation(fields: [dailyPlanId], references: [id], onDelete: Cascade)
+  exercises PlannedSessionExercise[]
+  feedback  SessionFeedback?
 
-  @@unique([routineId, order])
+  @@index([dailyPlanId, slot])
+}
+
+model PlannedSessionExercise {
+  id               String @id @default(cuid())
+  plannedSessionId String
+  exerciseId       String
+  order            Int
+  durationSeconds  Int
+
+  plannedSession PlannedSession @relation(fields: [plannedSessionId], references: [id], onDelete: Cascade)
+  exercise       Exercise       @relation(fields: [exerciseId], references: [id])
+
+  @@unique([plannedSessionId, order])
+}
+
+model SessionFeedback {
+  id               String   @id @default(cuid())
+  plannedSessionId String   @unique
+  painBefore       Int
+  painAfter        Int
+  helped           Boolean
+  durationRight    Boolean
+  wantMore         Boolean
+  createdAt        DateTime @default(now())
+
+  plannedSession PlannedSession @relation(fields: [plannedSessionId], references: [id], onDelete: Cascade)
+}
+
+// One per user per calendar day: the quick "how's your body feeling" check-in.
+model CheckIn {
+  id        String      @id @default(cuid())
+  userId    String
+  date      DateTime // normalized to midnight UTC
+  mood      CheckInMood
+  createdAt DateTime    @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+}
+
+model CoachMessage {
+  id                      String    @id @default(cuid())
+  userId                  String
+  role                    CoachRole
+  content                 String
+  suggestedFocus          String?
+  suggestedDurationMinutes Int?
+  createdAt               DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }
 
 model Subscription {

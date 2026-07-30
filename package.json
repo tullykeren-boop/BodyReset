@@ -1,5 +1,5 @@
 {
-  "name": "body-reset",
+  "name": "reset",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -17,11 +17,13 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.115.0",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "jose": "^6.2.3",
+    "lucide-react": "^1.27.0",
     "next": "16.2.10",
     "pg": "^8.22.0",
     "prisma": "^7.8.0",
