@@ -1,26 +1,82 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-ink: #1c2321;
+  --color-ink-soft: #57635c;
+  --color-paper: #eef0ea;
+  --color-card: #ffffff;
+  --color-moss: #4b6858;
+  --color-moss-deep: #384f42;
+  --color-clay: #b96a44;
+  --color-sand: #d3a05c;
+  --color-mist: #dce1d9;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-ink: var(--color-ink);
+  --color-ink-soft: var(--color-ink-soft);
+  --color-paper: var(--color-paper);
+  --color-card: var(--color-card);
+  --color-moss: var(--color-moss);
+  --color-moss-deep: var(--color-moss-deep);
+  --color-clay: var(--color-clay);
+  --color-sand: var(--color-sand);
+  --color-mist: var(--color-mist);
+  --font-display: var(--font-fraunces);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-plex-mono);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-inter), sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-fraunces), serif;
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(0.94);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+.breath-ring-outer {
+  background: radial-gradient(
+    circle,
+    rgba(75, 104, 88, 0.18) 0%,
+    rgba(75, 104, 88, 0.05) 60%,
+    transparent 72%
+  );
+  animation: breathe 4s ease-in-out infinite;
+}
+
+.breath-ring-inner {
+  border: 1.5px solid rgba(75, 104, 88, 0.35);
+  animation: breathe 4s ease-in-out infinite;
+  animation-delay: 0.3s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .breath-ring-outer,
+  .breath-ring-inner {
+    animation: none;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-mist);
+  border-radius: 3px;
 }

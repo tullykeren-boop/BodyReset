@@ -9,8 +9,7 @@ function toDate(unixSeconds: number | null | undefined) {
 }
 
 function planFromMetadata(subscription: Stripe.Subscription): SubscriptionPlan | null {
-  const plan = subscription.metadata?.plan;
-  return plan === "MONTHLY" || plan === "ANNUAL" ? plan : null;
+  return subscription.metadata?.plan === "PERSONAL" ? "PERSONAL" : null;
 }
 
 async function upsertSubscriptionFromStripe(subscription: Stripe.Subscription, userId: string) {

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import { SESSION_COOKIE } from "@/lib/session-constants";
 
-const PROTECTED_PATHS = ["/dashboard", "/target-area", "/intake", "/routine", "/workout", "/billing"];
+const PROTECTED_PATHS = ["/dashboard", "/progress", "/coach", "/team", "/onboarding", "/session", "/billing"];
 const AUTH_PATHS = ["/login", "/signup"];
 
 async function isAuthenticated(request: NextRequest) {
@@ -42,10 +42,11 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     "/dashboard/:path*",
-    "/target-area/:path*",
-    "/intake/:path*",
-    "/routine/:path*",
-    "/workout/:path*",
+    "/progress/:path*",
+    "/coach/:path*",
+    "/team/:path*",
+    "/onboarding/:path*",
+    "/session/:path*",
     "/billing/:path*",
     "/login",
     "/signup",

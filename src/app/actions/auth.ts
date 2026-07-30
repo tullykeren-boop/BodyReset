@@ -45,7 +45,7 @@ export async function signUp(
   });
 
   await createSession(user.id);
-  redirect("/target-area");
+  redirect("/onboarding");
 }
 
 export async function signIn(

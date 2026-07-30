@@ -5,39 +5,28 @@ import Link from "next/link";
 import { signUp, type AuthFormState } from "@/app/actions/auth";
 import { SubmitButton } from "@/components/submit-button";
 
+const inputClasses =
+  "rounded-xl border border-mist bg-card px-4 py-2.5 text-sm outline-none focus:border-moss focus:ring-1 focus:ring-moss";
+
 export function SignUpForm() {
   const [state, formAction] = useActionState<AuthFormState, FormData>(signUp, undefined);
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="name" className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+        <label htmlFor="name" className="text-sm font-medium text-ink">
           Name
         </label>
-        <input
-          id="name"
-          name="name"
-          type="text"
-          autoComplete="name"
-          required
-          className="rounded-lg border border-neutral-300 px-4 py-2.5 text-sm outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-600 dark:border-neutral-700 dark:bg-neutral-900"
-        />
+        <input id="name" name="name" type="text" autoComplete="name" required className={inputClasses} />
       </div>
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="email" className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+        <label htmlFor="email" className="text-sm font-medium text-ink">
           Email
         </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          required
-          className="rounded-lg border border-neutral-300 px-4 py-2.5 text-sm outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-600 dark:border-neutral-700 dark:bg-neutral-900"
-        />
+        <input id="email" name="email" type="email" autoComplete="email" required className={inputClasses} />
       </div>
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="password" className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+        <label htmlFor="password" className="text-sm font-medium text-ink">
           Password
         </label>
         <input
@@ -47,24 +36,22 @@ export function SignUpForm() {
           autoComplete="new-password"
           required
           minLength={8}
-          className="rounded-lg border border-neutral-300 px-4 py-2.5 text-sm outline-none focus:border-teal-600 focus:ring-1 focus:ring-teal-600 dark:border-neutral-700 dark:bg-neutral-900"
+          className={inputClasses}
         />
-        <p className="text-xs text-neutral-500">At least 8 characters.</p>
+        <p className="text-xs text-ink-soft/80">At least 8 characters.</p>
       </div>
 
       {state?.error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
-          {state.error}
-        </p>
+        <p className="rounded-lg bg-[#F3E2D6] px-3 py-2 text-sm text-[#8C4C2C]">{state.error}</p>
       )}
 
       <SubmitButton pendingText="Creating account…" className="mt-2 w-full">
         Create account
       </SubmitButton>
 
-      <p className="text-center text-sm text-neutral-500">
+      <p className="text-center text-sm text-ink-soft">
         Already have an account?{" "}
-        <Link href="/login" className="font-medium text-teal-700 hover:underline dark:text-teal-400">
+        <Link href="/login" className="font-medium text-moss-deep hover:underline">
           Sign in
         </Link>
       </p>
