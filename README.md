@@ -1,4 +1,4 @@
-# Body Reset
+# Reset
 
 A Next.js (App Router, TypeScript, Tailwind) app that generates short, targeted
 exercise routines based on where a user is feeling pain or tightness.
