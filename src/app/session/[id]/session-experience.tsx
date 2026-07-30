@@ -5,14 +5,14 @@ import Link from "next/link";
 import { Check, Pause, Play, SkipForward } from "lucide-react";
 import { submitSessionFeedback } from "@/app/actions/session";
 import { GhostButton, primaryButtonClasses } from "@/components/buttons";
-import { getYouTubeEmbedUrl } from "@/lib/youtube";
+import { BodyAreaMotion } from "@/components/body-area-motion";
 
 type PlayerExercise = {
   id: string;
   name: string;
   instructions: string;
   durationSeconds: number;
-  videoUrl: string | null;
+  bodyAreaSlug: string;
 };
 
 type Phase = "before" | "player" | "feedback" | "done";
@@ -149,7 +149,6 @@ function Player({
   const progressPercent = Math.round(
     ((current.durationSeconds - secondsLeft) / current.durationSeconds) * 100
   );
-  const embedUrl = getYouTubeEmbedUrl(current.videoUrl);
 
   return (
     <div className="flex h-full flex-col bg-ink px-6 pb-10 pt-8 text-paper">
@@ -174,18 +173,9 @@ function Player({
         <h1 className="font-display mt-4 text-2xl">{current.name}</h1>
         <p className="mt-2 max-w-xs text-sm leading-relaxed text-[#B7C0B8]">{current.instructions}</p>
 
-        {embedUrl && (
-          <div className="mt-4 aspect-video w-full max-w-[280px] overflow-hidden rounded-2xl border border-white/10 bg-black">
-            <iframe
-              key={current.id}
-              src={embedUrl}
-              title={`${current.name} demonstration`}
-              className="h-full w-full"
-              allow="accelerometer; encrypted-media; picture-in-picture"
-              allowFullScreen
-            />
-          </div>
-        )}
+        <div className="mt-4 flex h-40 w-40 items-center justify-center rounded-3xl border border-white/10 bg-white/[0.04] p-6">
+          <BodyAreaMotion slug={current.bodyAreaSlug} className="h-full w-full" />
+        </div>
 
         <div className="relative mt-6 flex h-28 w-28 shrink-0 items-center justify-center">
           <svg className="absolute -rotate-90" width="112" height="112">

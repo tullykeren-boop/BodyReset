@@ -145,8 +145,6 @@ model Exercise {
   // Which onboarding goals this exercise is well-suited for.
   goals           Goal[]
   equipment       String     @default("none")
-  // A real demonstration video for this movement (YouTube watch URL).
-  videoUrl        String?
   createdAt       DateTime   @default(now())
 
   muscleGroups     ExerciseMuscleGroup[]

@@ -72,6 +72,87 @@ body {
   }
 }
 
+/* Body-area demonstration motions (src/components/body-area-motion.tsx) */
+
+@keyframes motion-tilt {
+  0%,
+  100% {
+    transform: rotate(-16deg);
+  }
+  50% {
+    transform: rotate(16deg);
+  }
+}
+
+@keyframes motion-swing-full {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes motion-twist {
+  0%,
+  100% {
+    transform: rotate(-14deg);
+  }
+  50% {
+    transform: rotate(14deg);
+  }
+}
+
+@keyframes motion-fold {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(34deg);
+  }
+}
+
+@keyframes motion-rotate-partial {
+  0%,
+  100% {
+    transform: rotate(-34deg);
+  }
+  50% {
+    transform: rotate(34deg);
+  }
+}
+
+.motion-tilt {
+  animation: motion-tilt 3.2s ease-in-out infinite;
+}
+
+.motion-swing-full {
+  animation: motion-swing-full 2.8s linear infinite;
+}
+
+.motion-twist {
+  animation: motion-twist 3s ease-in-out infinite;
+}
+
+.motion-fold {
+  animation: motion-fold 3.4s ease-in-out infinite;
+}
+
+.motion-rotate-partial {
+  animation: motion-rotate-partial 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-tilt,
+  .motion-swing-full,
+  .motion-twist,
+  .motion-fold,
+  .motion-rotate-partial {
+    animation: none;
+  }
+}
+
 ::-webkit-scrollbar {
   width: 6px;
 }

@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { markSessionStarted } from "@/app/actions/session";
 import { canStartSession } from "@/lib/billing";
 import { FREE_SESSIONS_PER_WEEK } from "@/lib/plans";
+import { getBodyAreaByMuscleGroupId, getPrimaryBodyArea } from "@/lib/exercise-body-area";
 import { PhoneFrame } from "@/components/phone-frame";
 import { primaryButtonClasses } from "@/components/buttons";
 import { SessionExperience } from "./session-experience";
@@ -14,14 +15,17 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const session = await prisma.plannedSession.findUnique({
-    where: { id },
-    include: {
-      dailyPlan: true,
-      exercises: { include: { exercise: true }, orderBy: { order: "asc" } },
-      feedback: true,
-    },
-  });
+  const [session, bodyAreaByMuscleGroupId] = await Promise.all([
+    prisma.plannedSession.findUnique({
+      where: { id },
+      include: {
+        dailyPlan: true,
+        exercises: { include: { exercise: { include: { muscleGroups: true } } }, orderBy: { order: "asc" } },
+        feedback: true,
+      },
+    }),
+    getBodyAreaByMuscleGroupId(),
+  ]);
 
   if (!session || session.dailyPlan.userId !== user.id) notFound();
 
@@ -53,7 +57,7 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
     name: se.exercise.name,
     instructions: se.exercise.instructions,
     durationSeconds: se.durationSeconds,
-    videoUrl: se.exercise.videoUrl,
+    bodyAreaSlug: getPrimaryBodyArea(se.exercise, bodyAreaByMuscleGroupId)?.slug ?? "",
   }));
 
   return (
