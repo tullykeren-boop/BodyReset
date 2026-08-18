@@ -1,81 +1,100 @@
 import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { bodyAreas, muscleGroups, bodyAreaMuscleGroups, exercises } from "./seed-data";
+import {
+  concerns,
+  mechanisms,
+  concernMechanisms,
+  practices,
+  practiceConcerns,
+} from "./seed-data";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  console.log("Seeding body areas...");
-  for (const area of bodyAreas) {
-    await prisma.bodyArea.upsert({
-      where: { slug: area.slug },
-      update: area,
-      create: area,
+  console.log(`Seeding ${concerns.length} concerns...`);
+  for (const concern of concerns) {
+    await prisma.concern.upsert({
+      where: { slug: concern.slug },
+      update: concern,
+      create: concern,
     });
   }
 
-  console.log("Seeding muscle groups...");
-  for (const group of muscleGroups) {
-    await prisma.muscleGroup.upsert({
-      where: { slug: group.slug },
-      update: group,
-      create: group,
+  console.log(`Seeding ${mechanisms.length} mechanisms...`);
+  for (const mechanism of mechanisms) {
+    await prisma.mechanism.upsert({
+      where: { slug: mechanism.slug },
+      update: mechanism,
+      create: mechanism,
     });
   }
 
-  console.log("Linking body areas to muscle groups...");
-  for (const link of bodyAreaMuscleGroups) {
-    const [bodyArea, muscleGroup] = await Promise.all([
-      prisma.bodyArea.findUniqueOrThrow({ where: { slug: link.bodyArea } }),
-      prisma.muscleGroup.findUniqueOrThrow({ where: { slug: link.muscleGroup } }),
-    ]);
-    await prisma.bodyAreaMuscleGroup.upsert({
-      where: {
-        bodyAreaId_muscleGroupId: {
-          bodyAreaId: bodyArea.id,
-          muscleGroupId: muscleGroup.id,
-        },
-      },
+  // Resolve every slug up front so the link loops are plain id lookups rather
+  // than a query per row.
+  const concernIdBySlug = new Map(
+    (await prisma.concern.findMany({ select: { id: true, slug: true } })).map((c) => [c.slug, c.id])
+  );
+  const mechanismIdBySlug = new Map(
+    (await prisma.mechanism.findMany({ select: { id: true, slug: true } })).map((m) => [m.slug, m.id])
+  );
+
+  function concernId(slug: string) {
+    const id = concernIdBySlug.get(slug);
+    if (!id) throw new Error(`Unknown concern slug: "${slug}"`);
+    return id;
+  }
+  function mechanismId(slug: string) {
+    const id = mechanismIdBySlug.get(slug);
+    if (!id) throw new Error(`Unknown mechanism slug: "${slug}"`);
+    return id;
+  }
+
+  console.log(`Linking concerns to mechanisms (${concernMechanisms.length} links)...`);
+  for (const link of concernMechanisms) {
+    const ids = { concernId: concernId(link.concern), mechanismId: mechanismId(link.mechanism) };
+    await prisma.concernMechanism.upsert({
+      where: { concernId_mechanismId: ids },
       update: { weight: link.weight },
-      create: {
-        bodyAreaId: bodyArea.id,
-        muscleGroupId: muscleGroup.id,
-        weight: link.weight,
-      },
+      create: { ...ids, weight: link.weight },
     });
   }
 
-  console.log("Seeding exercises...");
-  for (const ex of exercises) {
-    const { muscleGroups: exMuscleGroups, ...exerciseData } = ex;
+  console.log(`Seeding ${practices.length} practices...`);
+  for (const practice of practices) {
+    const { mechanisms: practiceMechanisms, ...practiceData } = practice;
 
-    const exercise = await prisma.exercise.upsert({
-      where: { slug: ex.slug },
-      update: exerciseData,
-      create: exerciseData,
+    const row = await prisma.practice.upsert({
+      where: { slug: practice.slug },
+      update: practiceData,
+      create: practiceData,
     });
 
-    for (const link of exMuscleGroups) {
-      const muscleGroup = await prisma.muscleGroup.findUniqueOrThrow({
-        where: { slug: link.slug },
-      });
-      await prisma.exerciseMuscleGroup.upsert({
-        where: {
-          exerciseId_muscleGroupId: {
-            exerciseId: exercise.id,
-            muscleGroupId: muscleGroup.id,
-          },
-        },
-        update: { isPrimary: link.isPrimary },
-        create: {
-          exerciseId: exercise.id,
-          muscleGroupId: muscleGroup.id,
-          isPrimary: link.isPrimary,
-        },
+    for (const link of practiceMechanisms) {
+      const ids = { practiceId: row.id, mechanismId: mechanismId(link.slug) };
+      await prisma.practiceMechanism.upsert({
+        where: { practiceId_mechanismId: ids },
+        update: { weight: link.weight },
+        create: { ...ids, weight: link.weight },
       });
     }
+  }
+
+  const practiceIdBySlug = new Map(
+    (await prisma.practice.findMany({ select: { id: true, slug: true } })).map((p) => [p.slug, p.id])
+  );
+
+  console.log(`Applying ${practiceConcerns.length} direct concern overrides...`);
+  for (const override of practiceConcerns) {
+    const practiceId = practiceIdBySlug.get(override.practice);
+    if (!practiceId) throw new Error(`Unknown practice slug: "${override.practice}"`);
+    const ids = { practiceId, concernId: concernId(override.concern) };
+    await prisma.practiceConcern.upsert({
+      where: { practiceId_concernId: ids },
+      update: { weight: override.weight },
+      create: { ...ids, weight: override.weight },
+    });
   }
 
   console.log("Seed complete.");

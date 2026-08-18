@@ -39,7 +39,7 @@ export default async function BillingPage({
         <h1 className="font-display text-2xl tracking-tight">Billing</h1>
         <p className="mt-2 text-ink-soft">
           {active
-            ? "Manage your ReSet subscription."
+            ? "Manage your LetReSet subscription."
             : `Start your ${TRIAL_DAYS}-day free trial for unlimited sessions.`}
         </p>
       </div>
@@ -102,7 +102,7 @@ export default async function BillingPage({
       )}
 
       <p className="mt-10 text-center text-xs text-ink-soft/70">
-        Bringing ReSet to your whole team?{" "}
+        Bringing LetReSet to your whole team?{" "}
         <a href="mailto:teams@resetapp.com" className="font-medium text-moss-deep hover:underline">
           Talk to us about Teams
         </a>

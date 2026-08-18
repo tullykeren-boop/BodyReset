@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
-
-const MOOD_TO_DISCOMFORT: Record<string, number> = { GREAT: 2, OKAY: 4, TENSE: 7, PAIN: 9 };
+import { toBurden, MOOD_BURDEN } from "@/lib/intensity";
 
 function startOfUtcDay(date: Date) {
   const d = new Date(date);
@@ -9,11 +8,15 @@ function startOfUtcDay(date: Date) {
 }
 
 /**
- * Per-day discomfort trend (0-10, lower is better) over the last `days` days,
- * built from whichever signal is available that day: session feedback first,
- * then check-in mood. Days with no signal are omitted rather than guessed.
+ * Per-day burden trend (0-10, lower is always better) over the last `days`
+ * days, built from whichever signal is available that day: session feedback
+ * first, then check-in mood. Days with no signal are omitted rather than guessed.
+ *
+ * Readings on any intensity scale are normalised through `toBurden`, so a
+ * stress session and a lower-back session land on the same axis. Legacy
+ * pain-scale rows pass through unchanged.
  */
-export async function getDiscomfortTrend(userId: string, days: number): Promise<number[]> {
+export async function getBurdenTrend(userId: string, days: number): Promise<number[]> {
   const since = new Date();
   since.setDate(since.getDate() - days);
   const sinceDay = startOfUtcDay(since);
@@ -29,13 +32,13 @@ export async function getDiscomfortTrend(userId: string, days: number): Promise<
   for (const c of checkIns) {
     const key = c.date.toISOString().slice(0, 10);
     const arr = byDay.get(key) ?? [];
-    arr.push(MOOD_TO_DISCOMFORT[c.mood]);
+    arr.push(MOOD_BURDEN[c.mood]);
     byDay.set(key, arr);
   }
   for (const f of feedback) {
     const key = f.createdAt.toISOString().slice(0, 10);
     const arr = byDay.get(key) ?? [];
-    arr.push(f.painAfter);
+    arr.push(toBurden(f.scale, f.intensityAfter));
     byDay.set(key, arr);
   }
 

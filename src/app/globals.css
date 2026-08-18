@@ -65,9 +65,170 @@ body {
   animation-delay: 0.3s;
 }
 
+/* --- Practice demonstration figures ---
+   Each figure in practice-animation.tsx is inline SVG driven by one of these
+   keyframe loops. Durations are deliberately slow: the animation shows the
+   shape of the movement, it does not set the tempo. */
+
+@keyframes lr-tilt {
+  0%,
+  100% {
+    transform: rotate(-13deg);
+  }
+  50% {
+    transform: rotate(13deg);
+  }
+}
+
+@keyframes lr-roll {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(-6px);
+  }
+  75% {
+    transform: translateY(4px);
+  }
+}
+
+@keyframes lr-reach {
+  0%,
+  100% {
+    transform: scaleY(0.86) translateY(6px);
+  }
+  50% {
+    transform: scaleY(1) translateY(0);
+  }
+}
+
+@keyframes lr-twist {
+  0%,
+  100% {
+    transform: rotate(-10deg) scaleX(0.92);
+  }
+  50% {
+    transform: rotate(10deg) scaleX(1);
+  }
+}
+
+@keyframes lr-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes lr-sway {
+  0%,
+  100% {
+    transform: translateX(-7px);
+  }
+  50% {
+    transform: translateX(7px);
+  }
+}
+
+@keyframes lr-march-a {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-11px);
+  }
+}
+
+@keyframes lr-march-b {
+  0%,
+  100% {
+    transform: translateY(-11px);
+  }
+  50% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes lr-gaze {
+  0%,
+  100% {
+    transform: translateX(-17px);
+  }
+  50% {
+    transform: translateX(17px);
+  }
+}
+
+@keyframes lr-pulse {
+  0%,
+  100% {
+    transform: scale(0.72);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes lr-settle {
+  0%,
+  100% {
+    transform: translateY(-4px);
+  }
+  50% {
+    transform: translateY(4px);
+  }
+}
+
+.lr-anim-tilt {
+  animation: lr-tilt 4s ease-in-out infinite;
+}
+.lr-anim-roll {
+  animation: lr-roll 3s ease-in-out infinite;
+}
+.lr-anim-reach {
+  animation: lr-reach 3.5s ease-in-out infinite;
+}
+.lr-anim-twist {
+  animation: lr-twist 4.5s ease-in-out infinite;
+}
+.lr-anim-spin {
+  animation: lr-spin 3.5s linear infinite;
+}
+.lr-anim-sway {
+  animation: lr-sway 3.5s ease-in-out infinite;
+}
+.lr-anim-march-a {
+  animation: lr-march-a 1.4s ease-in-out infinite;
+}
+.lr-anim-march-b {
+  animation: lr-march-b 1.4s ease-in-out infinite;
+}
+.lr-anim-gaze {
+  animation: lr-gaze 4s ease-in-out infinite;
+}
+.lr-anim-pulse {
+  animation: lr-pulse 5s ease-in-out infinite;
+}
+.lr-anim-settle {
+  animation: lr-settle 5s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .breath-ring-outer,
-  .breath-ring-inner {
+  .breath-ring-inner,
+  .lr-anim-tilt,
+  .lr-anim-roll,
+  .lr-anim-reach,
+  .lr-anim-twist,
+  .lr-anim-spin,
+  .lr-anim-sway,
+  .lr-anim-march-a,
+  .lr-anim-march-b,
+  .lr-anim-gaze,
+  .lr-anim-pulse,
+  .lr-anim-settle {
     animation: none;
   }
 }

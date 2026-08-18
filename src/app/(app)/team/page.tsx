@@ -61,7 +61,7 @@ export default function TeamPage() {
       </div>
 
       <p className="mt-6 text-center text-xs text-ink-soft/70">
-        Interested in ReSet for your organization?{" "}
+        Interested in LetReSet for your organization?{" "}
         <a href="mailto:teams@resetapp.com" className="font-medium text-moss-deep hover:underline">
           Get in touch
         </a>

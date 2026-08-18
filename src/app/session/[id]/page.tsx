@@ -18,7 +18,8 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
     where: { id },
     include: {
       dailyPlan: true,
-      exercises: { include: { exercise: true }, orderBy: { order: "asc" } },
+      items: { include: { practice: true }, orderBy: { order: "asc" } },
+      concerns: { include: { concern: true }, orderBy: { rank: "asc" } },
       feedback: true,
     },
   });
@@ -32,10 +33,10 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
       return (
         <PhoneFrame>
           <div className="flex h-full flex-col items-center justify-center bg-paper px-6 text-center">
-            <p className="font-display text-2xl">You&apos;ve used your free sessions this week</p>
+            <p className="font-display text-2xl">You&apos;ve used your free routines this week</p>
             <p className="mt-3 max-w-xs text-sm text-ink-soft">
-              Free accounts get {FREE_SESSIONS_PER_WEEK} guided sessions a week. Upgrade to Personal
-              for unlimited sessions and the full AI coach.
+              Free accounts get {FREE_SESSIONS_PER_WEEK} guided routines a week. Upgrade to Personal
+              for unlimited routines and the full AI coach.
             </p>
             <Link href="/billing" className={primaryButtonClasses("mt-8")}>
               See plans
@@ -48,12 +49,19 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
 
   await markSessionStarted(session.id);
 
-  const exercises = session.exercises.map((se) => ({
-    id: se.id,
-    name: se.exercise.name,
-    instructions: se.exercise.instructions,
-    durationSeconds: se.durationSeconds,
+  const practices = session.items.map((item) => ({
+    id: item.id,
+    slug: item.practice.slug,
+    name: item.practice.name,
+    instructions: item.practice.instructions,
+    durationSeconds: item.durationSeconds,
+    modality: item.practice.modality,
+    breathPattern: item.practice.breathPattern,
   }));
+
+  // The dominant concern decides which scale the before/after slider speaks in:
+  // "Calm -> Overwhelmed" for a stress routine, "Fine -> Painful" for a physical one.
+  const scale = session.concerns[0]?.concern.scale ?? "PAIN";
 
   return (
     <PhoneFrame>
@@ -61,7 +69,8 @@ export default async function SessionPage({ params }: { params: Promise<{ id: st
         sessionId={session.id}
         title={session.title}
         focusLabel={session.focusLabel}
-        exercises={exercises}
+        practices={practices}
+        scale={scale}
         alreadyCompleted={Boolean(session.completedAt)}
       />
     </PhoneFrame>

@@ -7,10 +7,13 @@ export default async function CoachPage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const messages = await prisma.coachMessage.findMany({
-    where: { userId: user.id },
-    orderBy: { createdAt: "asc" },
-  });
+  const [messages, concerns] = await Promise.all([
+    prisma.coachMessage.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: "asc" },
+    }),
+    prisma.concern.findMany({ select: { slug: true, name: true } }),
+  ]);
 
   return (
     <CoachChat
@@ -19,11 +22,15 @@ export default async function CoachPage() {
         role: m.role,
         text: m.content,
         suggestion:
-          m.suggestedFocus && m.suggestedDurationMinutes
-            ? { focus: m.suggestedFocus, durationMinutes: m.suggestedDurationMinutes }
+          m.suggestedConcernSlug && m.suggestedDurationMinutes
+            ? {
+                concernSlug: m.suggestedConcernSlug,
+                durationMinutes: m.suggestedDurationMinutes,
+              }
             : null,
       }))}
       userFirstName={user.name?.split(" ")[0] ?? null}
+      concernNames={Object.fromEntries(concerns.map((c) => [c.slug, c.name]))}
     />
   );
 }

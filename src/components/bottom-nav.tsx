@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, TrendingUp, MessageCircle, Users } from "lucide-react";
+import { Home, Sparkles, TrendingUp, MessageCircle, Users } from "lucide-react";
 
 const TABS = [
   { href: "/dashboard", label: "Home", icon: Home },
+  { href: "/now", label: "Now", icon: Sparkles },
   { href: "/progress", label: "Progress", icon: TrendingUp },
   { href: "/coach", label: "Coach", icon: MessageCircle },
   { href: "/team", label: "Team", icon: Users },
@@ -19,7 +20,7 @@ export function BottomNav() {
       {TABS.map((tab) => {
         const active = pathname === tab.href;
         return (
-          <Link key={tab.href} href={tab.href} className="flex flex-col items-center gap-1 px-3 py-1">
+          <Link key={tab.href} href={tab.href} className="flex flex-col items-center gap-1 px-2.5 py-1">
             <tab.icon size={19} className={active ? "text-moss" : "text-[#A6AFA1]"} />
             <span className={`text-[10px] ${active ? "font-medium text-moss" : "text-[#A6AFA1]"}`}>
               {tab.label}

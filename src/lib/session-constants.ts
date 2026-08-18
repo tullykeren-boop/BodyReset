@@ -1,1 +1,1 @@
-export const SESSION_COOKIE = "br_session";
+export const SESSION_COOKIE = "letreset_session";

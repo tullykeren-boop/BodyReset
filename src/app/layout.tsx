@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -23,9 +23,18 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ReSet — AI Workday Recovery Coach",
+  title: "LetReSet — Movement Coach for Desk Workers",
   description:
-    "Your AI-powered recovery coach that helps you prevent and relieve workday pain in just a few minutes.",
+    "Short routines for how your body and head actually feel through the workday — physical or mental, in one to ten minutes.",
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "LetReSet" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#4b6858",
+  width: "device-width",
+  initialScale: 1,
+  // The app is a fixed-height phone shell; zooming just breaks the layout.
+  maximumScale: 1,
 };
 
 export default function RootLayout({

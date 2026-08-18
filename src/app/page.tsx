@@ -24,7 +24,7 @@ export default async function Home() {
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
         <div className="flex items-center gap-2">
           <BreathRing size={30} />
-          <span className="font-display text-xl tracking-tight">ReSet</span>
+          <span className="font-display text-xl tracking-tight">LetReSet</span>
         </div>
         <nav className="hidden gap-8 text-sm text-ink-soft md:flex">
           <a href="#how" className="hover:text-ink">How it works</a>
@@ -99,7 +99,7 @@ export default async function Home() {
 
       {/* How it works */}
       <section id="how" className="mx-auto max-w-6xl px-6 py-20">
-        <p className="font-display text-sm uppercase tracking-[0.2em] text-moss-deep">How ReSet works</p>
+        <p className="font-display text-sm uppercase tracking-[0.2em] text-moss-deep">How LetReSet works</p>
         <h2 className="font-display mt-3 max-w-xl text-3xl leading-tight">
           A recovery plan that fits inside your actual workday.
         </h2>
@@ -177,13 +177,13 @@ export default async function Home() {
             <p className="font-display flex items-center gap-2 text-sm uppercase tracking-[0.2em] text-[#8A6423]">
               <Building2 size={15} /> For teams
             </p>
-            <h2 className="font-display mt-3 text-3xl leading-tight">Bring ReSet to your whole team.</h2>
+            <h2 className="font-display mt-3 text-3xl leading-tight">Bring LetReSet to your whole team.</h2>
             <p className="mt-4 text-sm leading-relaxed text-ink-soft">
               Give every employee a personal recovery coach, and give HR aggregate, anonymized
               wellbeing trends — never individual health data.
             </p>
             <a href="mailto:teams@resetapp.com" className={ghostButtonClasses("mt-6")}>
-              Talk to us about ReSet for Teams
+              Talk to us about LetReSet for Teams
             </a>
           </div>
           <div className="mt-10 grid grow grid-cols-2 gap-4 md:mt-0">
@@ -243,7 +243,7 @@ export default async function Home() {
       </section>
 
       <footer className="bg-ink pb-10 text-center text-xs text-[#6E7A70]">
-        © 2026 ReSet. All rights reserved.
+        © 2026 LetReSet. All rights reserved.
       </footer>
     </div>
   );

@@ -1,67 +1,95 @@
 import { prisma } from "@/lib/prisma";
 import { getOrCreateDailyPlan } from "@/lib/daily-plan-generator";
-import { exerciseCountForMinutes, scoreExercises, pickTop } from "@/lib/daily-plan-generator";
+import { buildRoutine, type RoutineRequest } from "@/lib/routine-scorer";
+import type { SessionOrigin, Posture } from "@/generated/prisma/client";
+
+export type RoutineSessionInput = {
+  concernIds: string[];
+  minutes: number;
+  origin: SessionOrigin;
+  title?: string;
+  stateLogId?: string;
+  posture?: Posture;
+  discreetOnly?: boolean;
+  maxExertion?: number;
+};
 
 /**
- * Creates a one-off, coach-suggested session for right now, scored against
- * either the named focus area (if it matches one of the user's known body
- * areas) or, failing that, all of the user's profile pain areas.
+ * Builds a routine for right now and persists it as a session on today's plan.
+ * Shared by the coach's suggestions and the instant "how are you right now"
+ * flow, so both go through exactly the same scorer.
+ *
+ * The session stays attached to the DailyPlan so streaks and dashboard counts
+ * keep working without a second code path.
  */
-export async function createAdHocSession(
-  userId: string,
-  { focus, durationMinutes }: { focus: string; durationMinutes: number }
-) {
-  const profile = await prisma.profile.findUnique({
-    where: { userId },
-    include: { painAreas: { include: { bodyArea: true } } },
-  });
-  if (!profile) throw new Error("Cannot suggest a session before onboarding is complete");
+export async function createRoutineSession(userId: string, input: RoutineSessionInput) {
+  const profile = await prisma.profile.findUnique({ where: { userId } });
+  if (!profile) throw new Error("Cannot build a routine before onboarding is complete");
 
-  const matchedArea = await prisma.bodyArea.findFirst({
-    where: { name: { equals: focus, mode: "insensitive" } },
-  });
+  if (input.concernIds.length === 0) {
+    throw new Error("A routine needs at least one concern");
+  }
 
-  const bodyAreaIds = matchedArea
-    ? [matchedArea.id]
-    : profile.painAreas.map((p) => p.bodyAreaId);
+  const request: RoutineRequest = {
+    concernIds: input.concernIds,
+    minutes: input.minutes,
+    goals: [profile.goal],
+    userId,
+    posture: input.posture,
+    discreetOnly: input.discreetOnly,
+    maxExertion: input.maxExertion,
+    seed: `${userId}:${Date.now()}`,
+  };
 
-  const bodyAreaMuscleGroups = await prisma.bodyAreaMuscleGroup.findMany({
-    where: { bodyAreaId: { in: bodyAreaIds } },
-  });
-  const weightByMuscleGroupId = new Map(bodyAreaMuscleGroups.map((l) => [l.muscleGroupId, l.weight]));
-  const muscleGroupIds = [...weightByMuscleGroupId.keys()];
-
-  const candidates = await prisma.exercise.findMany({
-    where: { muscleGroups: { some: { muscleGroupId: { in: muscleGroupIds } } } },
-    include: { muscleGroups: true },
-  });
-
-  const count = exerciseCountForMinutes(durationMinutes);
-  const scored = scoreExercises(candidates, weightByMuscleGroupId, profile.goal, [], new Set());
-  const selected = pickTop(scored, count);
-
-  if (selected.length === 0) {
-    throw new Error("No exercises matched this suggestion");
+  const routine = await buildRoutine(request);
+  if (routine.items.length === 0) {
+    throw new Error("No practices matched this request");
   }
 
   const dailyPlan = await getOrCreateDailyPlan(userId);
 
-  const session = await prisma.plannedSession.create({
+  return prisma.plannedSession.create({
     data: {
       dailyPlanId: dailyPlan.id,
       slot: "ADHOC",
-      title: `${matchedArea?.name ?? focus} Release`,
-      focusLabel: matchedArea?.name ?? focus,
-      durationMinutes,
-      exercises: {
-        create: selected.map((exercise, index) => ({
-          exerciseId: exercise.id,
-          order: index,
-          durationSeconds: exercise.durationSeconds,
-        })),
+      origin: input.origin,
+      stateLogId: input.stateLogId,
+      title: input.title ?? `${routine.focusLabel} Reset`,
+      focusLabel: routine.focusLabel,
+      durationMinutes: routine.durationMinutes,
+      items: { create: routine.items },
+      concerns: {
+        create: routine.concernIds.map((concernId, rank) => ({ concernId, rank })),
       },
     },
   });
+}
 
-  return session;
+/**
+ * Coach-suggested session. `concernSlug` comes from the model's structured
+ * suggestion, so this is an id lookup rather than a fuzzy name match; an
+ * unknown slug falls back to the user's own profile concerns.
+ */
+export async function createAdHocSession(
+  userId: string,
+  { concernSlug, durationMinutes }: { concernSlug: string; durationMinutes: number }
+) {
+  const matched = await prisma.concern.findUnique({ where: { slug: concernSlug } });
+
+  let concernIds: string[];
+  if (matched) {
+    concernIds = [matched.id];
+  } else {
+    const profileConcerns = await prisma.profileConcern.findMany({
+      where: { profile: { userId } },
+      orderBy: { rank: "asc" },
+    });
+    concernIds = profileConcerns.map((c) => c.concernId);
+  }
+
+  return createRoutineSession(userId, {
+    concernIds,
+    minutes: durationMinutes,
+    origin: "COACH",
+  });
 }

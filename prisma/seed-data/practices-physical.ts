@@ -1,105 +1,9 @@
-export type GoalSeed = "REDUCE_PAIN" | "PREVENT" | "MOBILITY" | "ENERGY";
-export type DifficultySeed = "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+import type { PracticeSeed } from "./types";
 
-export const bodyAreas = [
-  {
-    slug: "neck",
-    name: "Neck",
-    description: "Release tightness and rebuild control in the cervical spine.",
-    sortOrder: 1,
-  },
-  {
-    slug: "shoulders",
-    name: "Shoulders",
-    description: "Restore mobility and stability across the rotator cuff and deltoids.",
-    sortOrder: 2,
-  },
-  {
-    slug: "upper-back",
-    name: "Upper back",
-    description: "Counter the round-shouldered slump that builds through long meeting blocks.",
-    sortOrder: 3,
-  },
-  {
-    slug: "lower-back",
-    name: "Lower back",
-    description: "Ease tension and build resilience through the lumbar spine, hips, and core.",
-    sortOrder: 4,
-  },
-  {
-    slug: "wrists",
-    name: "Wrists",
-    description: "Relieve strain from typing and mousing all day.",
-    sortOrder: 5,
-  },
-  {
-    slug: "hips",
-    name: "Hips",
-    description: "Open tight hip flexors and strengthen the glutes that support them.",
-    sortOrder: 6,
-  },
-] as const;
-
-export const muscleGroups = [
-  { slug: "erector-spinae", name: "Erector Spinae", description: "The muscles running along the spine that support upright posture." },
-  { slug: "glutes", name: "Glutes", description: "The hip extensor muscles that stabilize the pelvis and lower back." },
-  { slug: "hamstrings", name: "Hamstrings", description: "The back-of-thigh muscles that extend the hip and flex the knee." },
-  { slug: "hip-flexors", name: "Hip Flexors", description: "The muscles at the front of the hip that lift the leg and tilt the pelvis." },
-  { slug: "core", name: "Core / Abdominals", description: "The deep trunk muscles that stabilize the spine and pelvis." },
-  { slug: "rotator-cuff", name: "Rotator Cuff", description: "The small muscles that stabilize and rotate the shoulder joint." },
-  { slug: "upper-back", name: "Upper Back / Trapezius", description: "The muscles between the shoulder blades that support posture." },
-  { slug: "chest", name: "Chest", description: "The pectoral muscles, often tight from forward posture." },
-  { slug: "deltoids", name: "Deltoids", description: "The muscles capping the shoulder that drive arm movement." },
-  { slug: "neck-flexors", name: "Neck Flexors & Extensors", description: "The muscles that support and move the cervical spine." },
-  { slug: "levator-scapulae", name: "Levator Scapulae", description: "A muscle running from the neck to the shoulder blade, prone to tightness." },
-  { slug: "adductors", name: "Adductors", description: "The inner-thigh muscles that stabilize the hip and pelvis." },
-  { slug: "deep-hip-rotators", name: "Deep Hip Rotators", description: "Small muscles deep in the hip, including the piriformis." },
-  { slug: "forearm-flexors", name: "Forearm Flexors", description: "The muscles on the palm side of the forearm that flex the wrist." },
-  { slug: "forearm-extensors", name: "Forearm Extensors", description: "The muscles on the back of the forearm that extend the wrist." },
-] as const;
-
-// weight: 1 = primary driver of discomfort in this area, 2 = secondary/supporting
-export const bodyAreaMuscleGroups: { bodyArea: string; muscleGroup: string; weight: number }[] = [
-  { bodyArea: "neck", muscleGroup: "neck-flexors", weight: 1 },
-  { bodyArea: "neck", muscleGroup: "levator-scapulae", weight: 2 },
-  { bodyArea: "neck", muscleGroup: "upper-back", weight: 2 },
-
-  { bodyArea: "shoulders", muscleGroup: "rotator-cuff", weight: 1 },
-  { bodyArea: "shoulders", muscleGroup: "deltoids", weight: 2 },
-  { bodyArea: "shoulders", muscleGroup: "chest", weight: 2 },
-  { bodyArea: "shoulders", muscleGroup: "upper-back", weight: 2 },
-
-  { bodyArea: "upper-back", muscleGroup: "upper-back", weight: 1 },
-  { bodyArea: "upper-back", muscleGroup: "rotator-cuff", weight: 2 },
-  { bodyArea: "upper-back", muscleGroup: "chest", weight: 2 },
-  { bodyArea: "upper-back", muscleGroup: "erector-spinae", weight: 2 },
-
-  { bodyArea: "lower-back", muscleGroup: "erector-spinae", weight: 1 },
-  { bodyArea: "lower-back", muscleGroup: "core", weight: 1 },
-  { bodyArea: "lower-back", muscleGroup: "glutes", weight: 2 },
-  { bodyArea: "lower-back", muscleGroup: "hamstrings", weight: 2 },
-  { bodyArea: "lower-back", muscleGroup: "hip-flexors", weight: 2 },
-
-  { bodyArea: "wrists", muscleGroup: "forearm-flexors", weight: 1 },
-  { bodyArea: "wrists", muscleGroup: "forearm-extensors", weight: 2 },
-
-  { bodyArea: "hips", muscleGroup: "hip-flexors", weight: 1 },
-  { bodyArea: "hips", muscleGroup: "glutes", weight: 2 },
-  { bodyArea: "hips", muscleGroup: "adductors", weight: 2 },
-  { bodyArea: "hips", muscleGroup: "deep-hip-rotators", weight: 2 },
-];
-
-export const exercises: {
-  slug: string;
-  name: string;
-  description: string;
-  instructions: string;
-  difficulty: DifficultySeed;
-  durationSeconds: number;
-  equipment: string;
-  goals: GoalSeed[];
-  muscleGroups: { slug: string; isPrimary: boolean }[];
-}[] = [
+// The original 33 desk-recovery practices. Prose is unchanged from the first
+// build; only the link weights moved to the 0-100 scale. Per-practice posture,
+// discreetness and exertion are applied from PHYSICAL_PRACTICE_META below.
+export const physicalPractices: PracticeSeed[] = [
   // --- Neck ---
   {
     slug: "neck-mobility-reset",
@@ -111,7 +15,7 @@ export const exercises: {
     durationSeconds: 45,
     equipment: "none",
     goals: ["MOBILITY", "REDUCE_PAIN"],
-    muscleGroups: [{ slug: "neck-flexors", isPrimary: true }],
+    mechanisms: [{ slug: "neck-flexors", weight: 80 }],
   },
   {
     slug: "chin-tucks",
@@ -123,7 +27,7 @@ export const exercises: {
     durationSeconds: 30,
     equipment: "none",
     goals: ["PREVENT", "REDUCE_PAIN"],
-    muscleGroups: [{ slug: "neck-flexors", isPrimary: true }],
+    mechanisms: [{ slug: "neck-flexors", weight: 80 }],
   },
   {
     slug: "neck-side-stretch",
@@ -135,7 +39,7 @@ export const exercises: {
     durationSeconds: 30,
     equipment: "none",
     goals: ["REDUCE_PAIN", "MOBILITY"],
-    muscleGroups: [{ slug: "neck-flexors", isPrimary: true }],
+    mechanisms: [{ slug: "neck-flexors", weight: 80 }],
   },
   {
     slug: "upper-trap-release",
@@ -147,7 +51,7 @@ export const exercises: {
     durationSeconds: 30,
     equipment: "none",
     goals: ["REDUCE_PAIN", "MOBILITY"],
-    muscleGroups: [{ slug: "levator-scapulae", isPrimary: true }, { slug: "upper-back", isPrimary: false }],
+    mechanisms: [{ slug: "levator-scapulae", weight: 80 }, { slug: "upper-back", weight: 45 }],
   },
   {
     slug: "isometric-neck-press",
@@ -159,7 +63,7 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "none",
     goals: ["PREVENT"],
-    muscleGroups: [{ slug: "neck-flexors", isPrimary: true }],
+    mechanisms: [{ slug: "neck-flexors", weight: 80 }],
   },
 
   // --- Shoulders ---
@@ -173,7 +77,7 @@ export const exercises: {
     durationSeconds: 45,
     equipment: "doorway",
     goals: ["MOBILITY", "REDUCE_PAIN"],
-    muscleGroups: [{ slug: "chest", isPrimary: true }],
+    mechanisms: [{ slug: "chest", weight: 80 }],
   },
   {
     slug: "shoulder-rolls",
@@ -185,7 +89,7 @@ export const exercises: {
     durationSeconds: 30,
     equipment: "none",
     goals: ["MOBILITY", "ENERGY"],
-    muscleGroups: [{ slug: "deltoids", isPrimary: true }, { slug: "upper-back", isPrimary: false }],
+    mechanisms: [{ slug: "deltoids", weight: 80 }, { slug: "upper-back", weight: 45 }],
   },
   {
     slug: "band-external-rotation",
@@ -197,7 +101,7 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "resistance band",
     goals: ["PREVENT"],
-    muscleGroups: [{ slug: "rotator-cuff", isPrimary: true }],
+    mechanisms: [{ slug: "rotator-cuff", weight: 80 }],
   },
   {
     slug: "wall-slides",
@@ -209,10 +113,10 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "wall",
     goals: ["MOBILITY", "PREVENT"],
-    muscleGroups: [
-      { slug: "upper-back", isPrimary: true },
-      { slug: "rotator-cuff", isPrimary: false },
-      { slug: "deltoids", isPrimary: false },
+    mechanisms: [
+      { slug: "upper-back", weight: 80 },
+      { slug: "rotator-cuff", weight: 45 },
+      { slug: "deltoids", weight: 45 },
     ],
   },
   {
@@ -225,7 +129,7 @@ export const exercises: {
     durationSeconds: 30,
     equipment: "chair",
     goals: ["REDUCE_PAIN", "MOBILITY"],
-    muscleGroups: [{ slug: "rotator-cuff", isPrimary: true }, { slug: "deltoids", isPrimary: false }],
+    mechanisms: [{ slug: "rotator-cuff", weight: 80 }, { slug: "deltoids", weight: 45 }],
   },
   {
     slug: "cross-body-shoulder-stretch",
@@ -237,7 +141,7 @@ export const exercises: {
     durationSeconds: 30,
     equipment: "none",
     goals: ["REDUCE_PAIN"],
-    muscleGroups: [{ slug: "deltoids", isPrimary: true }, { slug: "upper-back", isPrimary: false }],
+    mechanisms: [{ slug: "deltoids", weight: 80 }, { slug: "upper-back", weight: 45 }],
   },
 
   // --- Upper back ---
@@ -251,7 +155,7 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "chair",
     goals: ["MOBILITY", "REDUCE_PAIN"],
-    muscleGroups: [{ slug: "upper-back", isPrimary: true }],
+    mechanisms: [{ slug: "upper-back", weight: 80 }],
   },
   {
     slug: "wall-angels",
@@ -263,7 +167,7 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "wall",
     goals: ["PREVENT", "MOBILITY"],
-    muscleGroups: [{ slug: "upper-back", isPrimary: true }, { slug: "rotator-cuff", isPrimary: false }],
+    mechanisms: [{ slug: "upper-back", weight: 80 }, { slug: "rotator-cuff", weight: 45 }],
   },
   {
     slug: "scapular-squeeze",
@@ -275,7 +179,7 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "none",
     goals: ["PREVENT"],
-    muscleGroups: [{ slug: "upper-back", isPrimary: true }],
+    mechanisms: [{ slug: "upper-back", weight: 80 }],
   },
   {
     slug: "thoracic-extension-stretch",
@@ -287,7 +191,7 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "chair",
     goals: ["MOBILITY", "REDUCE_PAIN"],
-    muscleGroups: [{ slug: "upper-back", isPrimary: true }, { slug: "chest", isPrimary: false }],
+    mechanisms: [{ slug: "upper-back", weight: 80 }, { slug: "chest", weight: 45 }],
   },
   {
     slug: "cat-cow-stretch",
@@ -299,10 +203,10 @@ export const exercises: {
     durationSeconds: 45,
     equipment: "none",
     goals: ["MOBILITY", "ENERGY"],
-    muscleGroups: [
-      { slug: "upper-back", isPrimary: true },
-      { slug: "erector-spinae", isPrimary: false },
-      { slug: "core", isPrimary: false },
+    mechanisms: [
+      { slug: "upper-back", weight: 80 },
+      { slug: "erector-spinae", weight: 45 },
+      { slug: "core", weight: 45 },
     ],
   },
 
@@ -317,7 +221,7 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "none",
     goals: ["REDUCE_PAIN", "MOBILITY"],
-    muscleGroups: [{ slug: "hamstrings", isPrimary: true }, { slug: "erector-spinae", isPrimary: false }],
+    mechanisms: [{ slug: "hamstrings", weight: 80 }, { slug: "erector-spinae", weight: 45 }],
   },
   {
     slug: "childs-pose",
@@ -329,7 +233,7 @@ export const exercises: {
     durationSeconds: 45,
     equipment: "none",
     goals: ["REDUCE_PAIN"],
-    muscleGroups: [{ slug: "erector-spinae", isPrimary: true }, { slug: "glutes", isPrimary: false }],
+    mechanisms: [{ slug: "erector-spinae", weight: 80 }, { slug: "glutes", weight: 45 }],
   },
   {
     slug: "knee-to-chest-stretch",
@@ -341,10 +245,10 @@ export const exercises: {
     durationSeconds: 30,
     equipment: "none",
     goals: ["REDUCE_PAIN"],
-    muscleGroups: [
-      { slug: "hip-flexors", isPrimary: true },
-      { slug: "erector-spinae", isPrimary: false },
-      { slug: "glutes", isPrimary: false },
+    mechanisms: [
+      { slug: "hip-flexors", weight: 80 },
+      { slug: "erector-spinae", weight: 45 },
+      { slug: "glutes", weight: 45 },
     ],
   },
   {
@@ -357,7 +261,7 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "none",
     goals: ["PREVENT", "REDUCE_PAIN"],
-    muscleGroups: [{ slug: "core", isPrimary: true }, { slug: "erector-spinae", isPrimary: false }],
+    mechanisms: [{ slug: "core", weight: 80 }, { slug: "erector-spinae", weight: 45 }],
   },
   {
     slug: "bird-dog",
@@ -369,10 +273,10 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "none",
     goals: ["PREVENT", "ENERGY"],
-    muscleGroups: [
-      { slug: "core", isPrimary: true },
-      { slug: "erector-spinae", isPrimary: true },
-      { slug: "glutes", isPrimary: false },
+    mechanisms: [
+      { slug: "core", weight: 80 },
+      { slug: "erector-spinae", weight: 80 },
+      { slug: "glutes", weight: 45 },
     ],
   },
   {
@@ -385,10 +289,10 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "none",
     goals: ["PREVENT", "ENERGY"],
-    muscleGroups: [
-      { slug: "glutes", isPrimary: true },
-      { slug: "hamstrings", isPrimary: false },
-      { slug: "erector-spinae", isPrimary: false },
+    mechanisms: [
+      { slug: "glutes", weight: 80 },
+      { slug: "hamstrings", weight: 45 },
+      { slug: "erector-spinae", weight: 45 },
     ],
   },
 
@@ -403,7 +307,7 @@ export const exercises: {
     durationSeconds: 30,
     equipment: "none",
     goals: ["REDUCE_PAIN", "MOBILITY"],
-    muscleGroups: [{ slug: "hip-flexors", isPrimary: true }],
+    mechanisms: [{ slug: "hip-flexors", weight: 80 }],
   },
   {
     slug: "figure-4-stretch",
@@ -415,7 +319,7 @@ export const exercises: {
     durationSeconds: 30,
     equipment: "none",
     goals: ["REDUCE_PAIN"],
-    muscleGroups: [{ slug: "deep-hip-rotators", isPrimary: true }, { slug: "glutes", isPrimary: false }],
+    mechanisms: [{ slug: "deep-hip-rotators", weight: 80 }, { slug: "glutes", weight: 45 }],
   },
   {
     slug: "butterfly-stretch",
@@ -427,7 +331,7 @@ export const exercises: {
     durationSeconds: 30,
     equipment: "none",
     goals: ["MOBILITY"],
-    muscleGroups: [{ slug: "adductors", isPrimary: true }],
+    mechanisms: [{ slug: "adductors", weight: 80 }],
   },
   {
     slug: "hip-circles",
@@ -439,7 +343,7 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "none",
     goals: ["MOBILITY", "ENERGY"],
-    muscleGroups: [{ slug: "hip-flexors", isPrimary: true }, { slug: "deep-hip-rotators", isPrimary: false }],
+    mechanisms: [{ slug: "hip-flexors", weight: 80 }, { slug: "deep-hip-rotators", weight: 45 }],
   },
   {
     slug: "standing-hip-abduction",
@@ -451,7 +355,7 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "none",
     goals: ["PREVENT"],
-    muscleGroups: [{ slug: "glutes", isPrimary: true }],
+    mechanisms: [{ slug: "glutes", weight: 80 }],
   },
   {
     slug: "clamshells",
@@ -463,7 +367,7 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "none",
     goals: ["PREVENT"],
-    muscleGroups: [{ slug: "glutes", isPrimary: true }],
+    mechanisms: [{ slug: "glutes", weight: 80 }],
   },
 
   // --- Wrists ---
@@ -477,9 +381,9 @@ export const exercises: {
     durationSeconds: 35,
     equipment: "none",
     goals: ["REDUCE_PAIN", "MOBILITY"],
-    muscleGroups: [
-      { slug: "forearm-flexors", isPrimary: true },
-      { slug: "forearm-extensors", isPrimary: true },
+    mechanisms: [
+      { slug: "forearm-flexors", weight: 80 },
+      { slug: "forearm-extensors", weight: 80 },
     ],
   },
   {
@@ -492,9 +396,9 @@ export const exercises: {
     durationSeconds: 30,
     equipment: "none",
     goals: ["MOBILITY", "ENERGY"],
-    muscleGroups: [
-      { slug: "forearm-flexors", isPrimary: true },
-      { slug: "forearm-extensors", isPrimary: true },
+    mechanisms: [
+      { slug: "forearm-flexors", weight: 80 },
+      { slug: "forearm-extensors", weight: 80 },
     ],
   },
   {
@@ -507,7 +411,7 @@ export const exercises: {
     durationSeconds: 30,
     equipment: "none",
     goals: ["REDUCE_PAIN", "MOBILITY"],
-    muscleGroups: [{ slug: "forearm-flexors", isPrimary: true }],
+    mechanisms: [{ slug: "forearm-flexors", weight: 80 }],
   },
   {
     slug: "wrist-curls",
@@ -519,7 +423,7 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "light weight",
     goals: ["PREVENT"],
-    muscleGroups: [{ slug: "forearm-flexors", isPrimary: true }],
+    mechanisms: [{ slug: "forearm-flexors", weight: 80 }],
   },
   {
     slug: "reverse-wrist-curls",
@@ -531,6 +435,6 @@ export const exercises: {
     durationSeconds: 40,
     equipment: "light weight",
     goals: ["PREVENT"],
-    muscleGroups: [{ slug: "forearm-extensors", isPrimary: true }],
+    mechanisms: [{ slug: "forearm-extensors", weight: 80 }],
   },
 ];

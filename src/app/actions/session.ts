@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import type { IntensityScale } from "@/generated/prisma/client";
 
 async function requireOwnedSession(sessionId: string, userId: string) {
   const session = await prisma.plannedSession.findUnique({
@@ -28,10 +29,16 @@ export async function markSessionStarted(sessionId: string) {
   });
 }
 
-export async function submitSessionFeedback(
-  sessionId: string,
-  feedback: { painBefore: number; painAfter: number; helped: boolean; durationRight: boolean; wantMore: boolean }
-) {
+export type SessionFeedbackInput = {
+  scale: IntensityScale;
+  intensityBefore: number;
+  intensityAfter: number;
+  helped: boolean;
+  durationRight: boolean;
+  wantMore: boolean;
+};
+
+export async function submitSessionFeedback(sessionId: string, feedback: SessionFeedbackInput) {
   const user = await getCurrentUser();
   if (!user) throw new Error("Not authenticated");
 

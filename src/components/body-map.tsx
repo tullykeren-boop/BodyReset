@@ -1,6 +1,6 @@
 "use client";
 
-import { BODY_AREA_DOTS } from "@/lib/body-areas";
+import { BODY_AREA_DOTS } from "@/lib/concerns";
 
 export function BodyMap({
   selected = [],

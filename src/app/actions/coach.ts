@@ -34,7 +34,7 @@ export async function sendCoachMessage(text: string) {
       userId: user.id,
       role: "ASSISTANT",
       content: reply.text,
-      suggestedFocus: reply.suggestion?.focus,
+      suggestedConcernSlug: reply.suggestion?.concernSlug,
       suggestedDurationMinutes: reply.suggestion?.durationMinutes,
     },
   });
@@ -42,10 +42,10 @@ export async function sendCoachMessage(text: string) {
   return reply;
 }
 
-export async function startSuggestedSession(focus: string, durationMinutes: number) {
+export async function startSuggestedSession(concernSlug: string, durationMinutes: number) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const session = await createAdHocSession(user.id, { focus, durationMinutes });
+  const session = await createAdHocSession(user.id, { concernSlug, durationMinutes });
   redirect(`/session/${session.id}`);
 }

@@ -8,21 +8,24 @@ type ChatMessage = {
   id: string;
   role: "USER" | "ASSISTANT";
   text: string;
-  suggestion: { focus: string; durationMinutes: number } | null;
+  suggestion: { concernSlug: string; durationMinutes: number } | null;
 };
 
 const SUGGESTED_PROMPTS = [
   "My shoulders feel worse today",
-  "I'm feeling really tired",
-  "My lower back is tight",
+  "I'm stressed and can't switch off",
+  "I can't focus this afternoon",
 ];
 
 export function CoachChat({
   initialMessages,
   userFirstName,
+  concernNames,
 }: {
   initialMessages: ChatMessage[];
   userFirstName: string | null;
+  /** slug -> display name, so a suggestion chip can label itself. */
+  concernNames: Record<string, string>;
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>(
     initialMessages.length > 0
@@ -77,7 +80,7 @@ export function CoachChat({
       <div className="border-b border-mist bg-card px-5 py-4">
         <h1 className="font-display text-xl">AI Coach</h1>
         <p className="text-xs text-ink-soft/80">
-          Tell it how you&apos;re feeling — it reads your history and suggests a session.
+          Tell it how you&apos;re feeling — body or head — and it&apos;ll suggest a routine.
         </p>
       </div>
 
@@ -94,14 +97,16 @@ export function CoachChat({
                 <button
                   onClick={() =>
                     startTransition(() => {
-                      startSuggestedSession(m.suggestion!.focus, m.suggestion!.durationMinutes);
+                      startSuggestedSession(m.suggestion!.concernSlug, m.suggestion!.durationMinutes);
                     })
                   }
                   disabled={isPending}
                   className="mt-3 flex w-full items-center justify-between rounded-xl border border-mist bg-paper px-3 py-2.5 text-xs font-medium text-moss-deep disabled:opacity-60"
                 >
                   <span className="flex items-center gap-1.5">
-                    <Play size={12} fill="currentColor" /> Start {m.suggestion.focus} · {m.suggestion.durationMinutes} min
+                    <Play size={12} fill="currentColor" /> Start{" "}
+                    {concernNames[m.suggestion.concernSlug] ?? m.suggestion.concernSlug} ·{" "}
+                    {m.suggestion.durationMinutes} min
                   </span>
                   <ChevronRight size={13} />
                 </button>

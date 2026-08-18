@@ -8,9 +8,20 @@ import { TIME_OPTIONS } from "@/lib/onboarding-options";
 
 const onboardingSchema = z.object({
   workdayType: z.enum(["MEETINGS", "DEEPWORK", "CREATIVE", "MIXED"]),
-  painAreaSlugs: z.array(z.string()).min(1, "Pick at least one area"),
-  timeAvailableMinutes: z.coerce.number().refine((n) => (TIME_OPTIONS as readonly number[]).includes(n)),
-  goal: z.enum(["REDUCE_PAIN", "PREVENT", "MOBILITY", "ENERGY"]),
+  // Physical and mental slugs both land here; at least one of either is required.
+  concernSlugs: z.array(z.string()).min(1, "Pick at least one concern"),
+  timeAvailableMinutes: z.coerce
+    .number()
+    .refine((n) => (TIME_OPTIONS as readonly number[]).includes(n)),
+  goal: z.enum([
+    "REDUCE_PAIN",
+    "PREVENT",
+    "MOBILITY",
+    "ENERGY",
+    "REDUCE_STRESS",
+    "IMPROVE_FOCUS",
+    "LIFT_MOOD",
+  ]),
 });
 
 export type OnboardingInput = z.infer<typeof onboardingSchema>;
@@ -23,12 +34,18 @@ export async function completeOnboarding(input: OnboardingInput) {
   if (!parsed.success) {
     throw new Error(parsed.error.issues[0]?.message ?? "Invalid onboarding input");
   }
-  const { workdayType, painAreaSlugs, timeAvailableMinutes, goal } = parsed.data;
+  const { workdayType, concernSlugs, timeAvailableMinutes, goal } = parsed.data;
 
-  const bodyAreas = await prisma.bodyArea.findMany({ where: { slug: { in: painAreaSlugs } } });
-  if (bodyAreas.length === 0) {
-    throw new Error("Could not find the selected body areas");
+  const concerns = await prisma.concern.findMany({ where: { slug: { in: concernSlugs } } });
+  if (concerns.length === 0) {
+    throw new Error("Could not find the selected concerns");
   }
+
+  // Preserve the order the user picked in: rank 0 is what the scorer leads with.
+  const ranked = concernSlugs
+    .map((slug) => concerns.find((c) => c.slug === slug))
+    .filter((c) => c !== undefined)
+    .map((concern, rank) => ({ concernId: concern.id, rank }));
 
   await prisma.profile.upsert({
     where: { userId: user.id },
@@ -37,15 +54,15 @@ export async function completeOnboarding(input: OnboardingInput) {
       workdayType,
       timeAvailableMinutes,
       goal,
-      painAreas: { create: bodyAreas.map((a) => ({ bodyAreaId: a.id })) },
+      concerns: { create: ranked },
     },
     update: {
       workdayType,
       timeAvailableMinutes,
       goal,
-      painAreas: {
+      concerns: {
         deleteMany: {},
-        create: bodyAreas.map((a) => ({ bodyAreaId: a.id })),
+        create: ranked,
       },
     },
   });

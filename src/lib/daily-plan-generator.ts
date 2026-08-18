@@ -1,10 +1,15 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
-import type { Exercise, Goal, SessionSlot } from "@/generated/prisma/client";
+import type { Goal, SessionSlot } from "@/generated/prisma/client";
+import { buildRoutine } from "@/lib/routine-scorer";
 
 const PLAN_INCLUDE = {
   sessions: {
-    include: { exercises: { include: { exercise: true }, orderBy: { order: "asc" as const } }, feedback: true },
+    include: {
+      items: { include: { practice: true }, orderBy: { order: "asc" as const } },
+      concerns: { include: { concern: true }, orderBy: { rank: "asc" as const } },
+      feedback: true,
+    },
     orderBy: { slot: "asc" as const },
   },
 } satisfies Prisma.DailyPlanInclude;
@@ -15,62 +20,30 @@ function startOfUtcDay(date: Date) {
   return d;
 }
 
-export function exerciseCountForMinutes(minutes: number): number {
-  if (minutes <= 3) return 2;
-  if (minutes <= 5) return 3;
-  if (minutes <= 8) return 4;
-  return 5;
-}
-
-export type ScoredExercise = { exercise: Exercise & { muscleGroups: { muscleGroupId: string; isPrimary: boolean }[] }; score: number };
-
-export function scoreExercises(
-  candidates: ScoredExercise["exercise"][],
-  weightByMuscleGroupId: Map<string, number>,
-  goal: Goal,
-  goalBias: Goal[],
-  usedIds: Set<string>
-): ScoredExercise[] {
-  return candidates.map((exercise) => {
-    let score = 0;
-    for (const link of exercise.muscleGroups) {
-      const areaWeight = weightByMuscleGroupId.get(link.muscleGroupId);
-      if (!areaWeight) continue;
-      const primaryBonus = areaWeight === 1 ? 3 : 1;
-      const exerciseBonus = link.isPrimary ? 2 : 1;
-      score += primaryBonus * exerciseBonus;
-    }
-    if (exercise.goals.includes(goal)) score += 4;
-    for (const bias of goalBias) {
-      if (exercise.goals.includes(bias)) score += 2;
-    }
-    if (usedIds.has(exercise.id)) score -= 1000;
-    score += Math.random() * 0.5;
-    return { exercise, score };
-  });
-}
-
-export function pickTop(scored: ScoredExercise[], count: number) {
-  return [...scored].sort((a, b) => b.score - a.score).slice(0, count).map((s) => s.exercise);
-}
-
-function focusLabelFor(selected: ScoredExercise["exercise"][], bodyAreaNameByMuscleGroupId: Map<string, string>) {
-  const names: string[] = [];
-  for (const ex of selected) {
-    const primaryLink = ex.muscleGroups.find((l) => l.isPrimary) ?? ex.muscleGroups[0];
-    if (!primaryLink) continue;
-    const name = bodyAreaNameByMuscleGroupId.get(primaryLink.muscleGroupId);
-    if (name && !names.includes(name)) names.push(name);
-    if (names.length >= 2) break;
-  }
-  return names.length > 0 ? names.join(" + ") : "Full body";
-}
-
 const SLOT_DEFS: { slot: SessionSlot; title: string; minuteFactor: number; goalBias: Goal[] }[] = [
-  { slot: "MORNING", title: "Morning Reset", minuteFactor: 0.6, goalBias: ["MOBILITY"] },
-  { slot: "MIDDAY", title: "Midday Recovery", minuteFactor: 1, goalBias: [] },
-  { slot: "EVENING", title: "End of Day Reset", minuteFactor: 1.4, goalBias: ["ENERGY", "PREVENT"] },
+  { slot: "MORNING", title: "Morning Reset", minuteFactor: 0.6, goalBias: ["MOBILITY", "IMPROVE_FOCUS"] },
+  { slot: "MIDDAY", title: "Midday Recovery", minuteFactor: 1, goalBias: ["REDUCE_STRESS"] },
+  {
+    slot: "EVENING",
+    title: "End of Day Reset",
+    minuteFactor: 1.4,
+    goalBias: ["ENERGY", "PREVENT", "REDUCE_STRESS"],
+  },
 ];
+
+/**
+ * Rotates which of the user's concerns leads each slot.
+ *
+ * Passing the same ranked list to all three slots makes every session lead with
+ * the same concern, so a user who picked neck, shoulders, stress and focus gets
+ * three sessions all labelled "Neck + Shoulders" and never sees the mental half
+ * of what they asked for. Rotating means the day covers the whole set.
+ */
+export function rotateConcerns(concernIds: string[], slotIndex: number): string[] {
+  if (concernIds.length <= 1) return concernIds;
+  const offset = slotIndex % concernIds.length;
+  return [...concernIds.slice(offset), ...concernIds.slice(0, offset)];
+}
 
 export async function getOrCreateDailyPlan(userId: string, forDate: Date = new Date()) {
   const date = startOfUtcDay(forDate);
@@ -83,62 +56,44 @@ export async function getOrCreateDailyPlan(userId: string, forDate: Date = new D
 
   const profile = await prisma.profile.findUnique({
     where: { userId },
-    include: { painAreas: { include: { bodyArea: true } } },
+    include: { concerns: { include: { concern: true }, orderBy: { rank: "asc" } } },
   });
   if (!profile) {
     throw new Error("Cannot generate a daily plan before onboarding is complete");
   }
 
-  const bodyAreaIds = profile.painAreas.map((p) => p.bodyAreaId);
-  const bodyAreaMuscleGroups = await prisma.bodyAreaMuscleGroup.findMany({
-    where: { bodyAreaId: { in: bodyAreaIds } },
-    include: { bodyArea: true },
-  });
-
-  const weightByMuscleGroupId = new Map<string, number>();
-  const bodyAreaNameByMuscleGroupId = new Map<string, string>();
-  for (const link of bodyAreaMuscleGroups) {
-    const existingWeight = weightByMuscleGroupId.get(link.muscleGroupId);
-    if (!existingWeight || link.weight < existingWeight) {
-      weightByMuscleGroupId.set(link.muscleGroupId, link.weight);
-    }
-    if (link.weight === 1) {
-      bodyAreaNameByMuscleGroupId.set(link.muscleGroupId, link.bodyArea.name);
-    }
-  }
-  const muscleGroupIds = [...weightByMuscleGroupId.keys()];
-
-  const candidates = await prisma.exercise.findMany({
-    where: { muscleGroups: { some: { muscleGroupId: { in: muscleGroupIds } } } },
-    include: { muscleGroups: true },
-  });
-
+  const concernIds = profile.concerns.map((c) => c.concernId);
   const usedIds = new Set<string>();
+  const isoDate = date.toISOString().slice(0, 10);
+
   const sessionsData: {
     slot: SessionSlot;
     title: string;
     focusLabel: string;
     durationMinutes: number;
-    exercises: { exerciseId: string; order: number; durationSeconds: number }[];
+    concernIds: string[];
+    items: { practiceId: string; order: number; durationSeconds: number }[];
   }[] = [];
 
-  for (const def of SLOT_DEFS) {
-    const durationMinutes = Math.max(3, Math.round(profile.timeAvailableMinutes * def.minuteFactor));
-    const count = exerciseCountForMinutes(durationMinutes);
-    const scored = scoreExercises(candidates, weightByMuscleGroupId, profile.goal, def.goalBias, usedIds);
-    const selected = pickTop(scored, count);
-    selected.forEach((ex) => usedIds.add(ex.id));
+  for (const [slotIndex, def] of SLOT_DEFS.entries()) {
+    const minutes = Math.max(2, Math.round(profile.timeAvailableMinutes * def.minuteFactor));
+    const routine = await buildRoutine({
+      concernIds: rotateConcerns(concernIds, slotIndex),
+      minutes,
+      goals: [profile.goal, ...def.goalBias],
+      userId,
+      excludePracticeIds: usedIds,
+      seed: `${userId}:${isoDate}:${def.slot}`,
+    });
+    routine.items.forEach((item) => usedIds.add(item.practiceId));
 
     sessionsData.push({
       slot: def.slot,
       title: def.title,
-      focusLabel: focusLabelFor(selected, bodyAreaNameByMuscleGroupId),
-      durationMinutes,
-      exercises: selected.map((ex, index) => ({
-        exerciseId: ex.id,
-        order: index,
-        durationSeconds: ex.durationSeconds,
-      })),
+      focusLabel: routine.focusLabel,
+      durationMinutes: routine.durationMinutes,
+      concernIds: routine.concernIds,
+      items: routine.items,
     });
   }
 
@@ -150,10 +105,14 @@ export async function getOrCreateDailyPlan(userId: string, forDate: Date = new D
         sessions: {
           create: sessionsData.map((s) => ({
             slot: s.slot,
+            origin: "DAILY_PLAN",
             title: s.title,
             focusLabel: s.focusLabel,
             durationMinutes: s.durationMinutes,
-            exercises: { create: s.exercises },
+            items: { create: s.items },
+            concerns: {
+              create: s.concernIds.map((concernId, rank) => ({ concernId, rank })),
+            },
           })),
         },
       },
